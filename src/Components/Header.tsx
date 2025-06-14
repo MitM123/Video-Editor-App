@@ -1,5 +1,6 @@
-import { Play, Undo2, Redo2, Upload } from 'lucide-react';
+import {  Undo2, Redo2, Upload } from 'lucide-react';
 import { useState } from 'react';
+import logo from '../assets/logo.jpg'; 
 
 const Header = () => {
     const [projectName, setProjectName] = useState('New Project');
@@ -7,14 +8,14 @@ const Header = () => {
         <div className="flex items-center font-dmsans justify-between px-8 py-2 bg-[#f1f3f4] flex-shrink-0 shadow-sm">
             <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-5">
-                    <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
-                        <Play className="w-5 h-5 text-white fill-white" />
+                    <div className="w-10 h-10 flex items-center justify-center">
+                        <img src={logo} alt="" className='rounded-full' />
                     </div>
                     <input
                         type="text"
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
-                        className="w-32 px-3 py-1 sm:px-4 sm:py-1.5 bg-white/80 backdrop-blur-sm rounded-lg text-center text-slate-700 font-medium shadow-sm focus:outline-none  text-sm sm:text-base"
+                        className="w-32 px-3 py-1 sm:px-4 sm:py-1.5 bg-white/80 backdrop-blur-sm rounded-lg text-center text-slate-700 font-medium shadow-sm focus:outline-none text-sm sm:text-sm"
                         placeholder="Project Name"
                     />
                 </div>

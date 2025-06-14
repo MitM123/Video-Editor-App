@@ -90,7 +90,7 @@ const SideBar = () => {
 
     return (
         <>
-            <div className="w-20 pb-16 flex flex-col font-dmsans bg-tertiary overflow-y-auto border-r border-gray-200">
+            <div className="w-20  flex flex-col font-dmsans bg-tertiary overflow-y-auto border-r border-gray-200">
                 {sidebarItems.map(({ id, icon: Icon, label }) => (
                     <button
                         key={id}
