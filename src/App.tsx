@@ -1,12 +1,15 @@
+import { Route, Routes } from 'react-router'
+import Home from './Pages/Home'
 import './App.css'
+import Editor from './Pages/Editor'
 
 function App() {
-
   return (
     <>
-      <div className='flex bg-amber-400 justify-center'>
-        This is Home Page
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/editor" element={<Editor />} />
+      </Routes>
     </>
   )
 }
