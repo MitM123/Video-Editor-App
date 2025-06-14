@@ -20,7 +20,7 @@ const Editor = () => {
                         <Preview />
                     </div>
 
-                    <div className="h-56 bg-secondary overflow-y-auto shadow-inner">
+                    <div className="h-64 bg-secondary overflow-y-auto shadow-inner">
                         <TimeLine />
                     </div>
                 </div>
