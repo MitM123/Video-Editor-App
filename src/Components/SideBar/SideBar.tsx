@@ -7,7 +7,9 @@ import {
     Image,
     Type,
     SmilePlus,
-    SquaresExclude
+    SquaresExclude,
+    FilterIcon,
+    Sparkles
 } from 'lucide-react';
 import SideBarPanel from './SideBarPenel';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -30,6 +32,16 @@ const SideBar = () => {
             id: 'videos',
             icon: Play,
             label: 'Videos'
+        },
+        {
+            id: 'filters',
+            icon: FilterIcon,
+            label: 'Filters'
+        },
+        {
+            id: 'effects',
+            icon: Sparkles, 
+            label: 'Effects'
         },
         {
             id: 'audio',

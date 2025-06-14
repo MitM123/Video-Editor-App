@@ -10,6 +10,8 @@ import Images from './RendarPenelComponents/Images';
 import Text from './RendarPenelComponents/Text';
 import Shapes from './RendarPenelComponents/Shapes';
 import Stickers from './RendarPenelComponents/Stickers';
+import Filter from './RendarPenelComponents/Filter';
+import Effects from './RendarPenelComponents/Effects';
 
 const SideBarPanel = ({ activeItem, isOpen, onClose }: { activeItem: string; isOpen: boolean; onClose: () => void }) => {
     if (!isOpen) return null;
@@ -29,6 +31,16 @@ const SideBarPanel = ({ activeItem, isOpen, onClose }: { activeItem: string; isO
             case 'videos':
                 return (
                     <Videos />
+                );
+
+            case 'filters':
+                return (
+                    <Filter />
+                );
+
+            case 'effects':
+                return (
+                    <Effects />
                 );
 
             case 'audio':
@@ -67,7 +79,6 @@ const SideBarPanel = ({ activeItem, isOpen, onClose }: { activeItem: string; isO
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-gray-800">{activeItem.charAt(0).toUpperCase() + activeItem.slice(1)}</h2>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">More (0)</span>
                         <button onClick={onClose} className='cursor-pointer'>
                             <X className="w-5 h-5 text-gray-500" />
                         </button>
