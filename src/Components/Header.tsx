@@ -23,10 +23,10 @@ const Header = () => {
 
             <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
-                    <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                    <button className="p-2 hover:bg-gray-100 cursor-pointer rounded-md transition-colors">
                         <Undo2 className="w-5 h-5 text-gray-600" />
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                    <button className="p-2 hover:bg-gray-100 cursor-pointer rounded-md transition-colors">
                         <Redo2 className="w-5 h-5 text-gray-600" />
                     </button>
                 </div>

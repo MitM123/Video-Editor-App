@@ -1,14 +1,14 @@
 import { useState, useRef, useCallback, use } from 'react';
 import { Upload, Play, Trash } from "lucide-react";
-import { addVideos } from '../../../Slices/Video/Video.slice';
 import { useDispatch } from 'react-redux';
+import { addVideos, removeVideo } from '../../../Slices/Video/Video.slice';
 
 const VideoUploads = () => {
     const [uploadedVideos, setUploadedVideos] = useState<{ url: string, name: string }[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const [selectedAspectRatio, setSelectedAspectRatio] = useState('16/9');
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const dispatch = useDispatch();
+    const dispatch=useDispatch();
 
     const aspectRatioOptions = [
         { value: '16/9', label: '16:9' },
@@ -17,16 +17,16 @@ const VideoUploads = () => {
         { value: '9/16', label: '9:16' },
     ];
 
-
     const handleUpload = useCallback((files: FileList | null) => {
         if (files && files.length > 0) {
-            const newVideos: { url: string, name: string }[] = Array.from(files).map(file => ({
+            const newVideos = Array.from(files).map(file => ({
                 url: URL.createObjectURL(file),
                 name: file.name
             }));
+            setUploadedVideos(prev => [...prev, ...newVideos]);
             dispatch(addVideos(newVideos));
         }
-    }, [dispatch]);
+    }, []);
 
     const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         handleUpload(e.target.files);
@@ -36,6 +36,7 @@ const VideoUploads = () => {
     const handleRemove = (index: number) => {
         URL.revokeObjectURL(uploadedVideos[index].url);
         setUploadedVideos(prev => prev.filter((_, i) => i !== index));
+        dispatch(removeVideo(index));
     };
 
     const triggerFileInput = () => {
@@ -95,8 +96,8 @@ const VideoUploads = () => {
                                     key={option.value}
                                     onClick={() => setSelectedAspectRatio(option.value)}
                                     className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${selectedAspectRatio === option.value
-                                        ? 'bg-blue-100 text-blue-600 border border-blue-200'
-                                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                            ? 'bg-blue-100 text-blue-600 border border-blue-200'
+                                            : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-50'
                                         }`}
                                 >
                                     {option.label}
@@ -120,8 +121,8 @@ const VideoUploads = () => {
                                 key={option.value}
                                 onClick={() => setSelectedAspectRatio(option.value)}
                                 className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${selectedAspectRatio === option.value
-                                    ? 'bg-blue-100 text-blue-600 border border-blue-200'
-                                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                        ? 'bg-blue-100 text-blue-600 border border-blue-200'
+                                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-50'
                                     }`}
                             >
                                 {option.label}

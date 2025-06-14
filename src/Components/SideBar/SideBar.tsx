@@ -107,7 +107,7 @@ const SideBar = () => {
                     <button
                         key={id}
                         onClick={() => handleItemClick(id)}
-                        className={`flex flex-col items-center py-3 px-1 mx-2 my-1 rounded-lg transition duration-200
+                        className={`flex flex-col cursor-pointer items-center py-3 px-1 mx-2 my-1 rounded-lg transition duration-200
                         ${activeItem === id ? 'bg-white text-gray-800 font-semibold shadow-sm' : 'text-gray-600 hover:bg-white hover:bg-opacity-50'}`}
                     >
                         <Icon className="w-[18px] h-[18px] mb-1.5" strokeWidth={2} />

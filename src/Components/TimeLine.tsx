@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Plus, Minus, Type, Video, Music, Image, RotateCcw } from 'lucide-react';
+import { Play, Plus, Minus, Type, Music, Image, SquareSplitHorizontal, Trash } from 'lucide-react';
+import { FaPlay } from "react-icons/fa6";
+import { BsFillPauseFill } from "react-icons/bs";
 
 interface Clip {
   id: string;
@@ -76,7 +78,7 @@ const Timeline = () => {
 
   // Playback simulation
   useEffect(() => {
-    let interval: number | null = null;  
+    let interval: number | null = null;
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentTime(prev => {
@@ -89,7 +91,7 @@ const Timeline = () => {
       }, 100);
     }
     return () => {
-      if (interval) clearInterval(interval);  
+      if (interval) clearInterval(interval);
     };
   }, [isPlaying, totalDuration]);
 
@@ -106,15 +108,15 @@ const Timeline = () => {
     }
   };
 
-  const getClipIcon = (type: string) => {
-    switch (type) {
-      case 'text': return <Type className="w-3 h-3 text-gray-600" />;
-      case 'video': return <Video className="w-3 h-3 text-gray-600" />;
-      case 'audio': return <Music className="w-3 h-3 text-gray-600" />;
-      case 'image': return <Image className="w-3 h-3 text-gray-600" />;
-      default: return null;
-    }
-  };
+  // const getClipIcon = (type: string) => {
+  //   switch (type) {
+  //     case 'text': return <Type className="w-3 h-3 text-gray-600" />;
+  //     case 'video': return <Video className="w-3 h-3 text-gray-600" />;
+  //     case 'audio': return <Music className="w-3 h-3 text-gray-600" />;
+  //     case 'image': return <Image className="w-3 h-3 text-gray-600" />;
+  //     default: return null;
+  //   }
+  // };
 
   const handleClipMouseDown = (e: React.MouseEvent, clipId: string) => {
     e.stopPropagation();
@@ -174,33 +176,32 @@ const Timeline = () => {
 
   return (
     <div className="w-full h-full  bg-white font-dmsans flex flex-col overflow-y-auto">
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-black rounded-full"></div>
-            <span className="text-sm font-medium text-gray-700">Background</span>
+          <div className="flex items-center cursor-pointer space-x-1">
+            <SquareSplitHorizontal className="w-4 h-4 text-gray-500" />
+            <span className="text-xs font-semibold text-gray-600">Split Clip</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <RotateCcw className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-600">Split Clip</span>
+          <div className="flex items-center cursor-pointer space-x-1">
+            <Trash className="w-4 h-4 text-gray-500" />
+            <span className="text-xs font-semibold text-gray-600">Delete</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4">
-          <span className="text-sm font-mono text-gray-600">
+          <span className="text-sm font-dmsans text-gray-600">
             0:00.0 / 0:07.1
           </span>
           <button
             onClick={togglePlayback}
-            className="flex items-center justify-center w-8 h-8 bg-white border rounded hover:bg-gray-50 transition-colors"
-            style={{ borderColor: '#dee1e3' }}
+            className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white border rounded-full hover:bg-gray-50 transition-colors border-gray-300"
           >
-            {isPlaying ? <Pause className="w-4 h-4 text-gray-700" /> : <Play className="w-4 h-4 text-gray-700 ml-0.5" />}
+            {isPlaying ? <BsFillPauseFill className="w-6 h-6 text-gray-700" /> : <FaPlay className="w-4 h-4 text-gray-700 ml-0.5" />}
           </button>
         </div>
 
         <div className="flex items-center space-x-3">
-          <span className="text-sm text-gray-500">Timeline Scale</span>
+          <span className="text-xs font-semibold text-gray-500">Timeline Scale</span>
           <button
             onClick={zoomOut}
             className="w-6 h-6 flex items-center justify-center border rounded hover:bg-gray-50"
@@ -215,13 +216,6 @@ const Timeline = () => {
           >
             <Plus className="w-3 h-3 text-gray-600" />
           </button>
-          <select
-            className="px-2 py-1 text-xs border rounded text-gray-600 bg-white"
-            style={{ borderColor: '#dee1e3' }}
-            defaultValue="Fit View"
-          >
-            <option>Fit View</option>
-          </select>
         </div>
       </div>
 
@@ -303,7 +297,7 @@ const Timeline = () => {
                       clipContent = (
                         <div className="h-full flex items-center justify-center rounded overflow-hidden bg-gray-300">
                           <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-500" >
-                            <Video className="w-3 h-3 text-white" />
+                            <FaPlay className="w-3 h-3 text-white" />
                           </div>
                           <div className="w-6 h-6 rounded-full flex items-center justify-center ml-1 bg-gray-500">
                             <Play className="w-2 h-2 text-white" />
