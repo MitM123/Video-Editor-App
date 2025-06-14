@@ -6,7 +6,7 @@ const Preview = () => {
   const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
 
   return (
-    <div className="flex flex-col items-center justify-center  bg-gray-100 p-4">
+    <div className="flex flex-col  items-center justify-cente font-monasans font-semibold p-4">
       {uploadedVideos.length === 0 ? (
         <p className="text-gray-600 text-lg">No videos uploaded yet.</p>
       ) : (
@@ -21,7 +21,7 @@ const Preview = () => {
               <source src={video.url} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-            <p className="text-center mt-2 text-gray-800 font-medium">{video.name}</p>
+            {/* <p className="text-center mt-2 text-gray-800 font-medium">{video.name}</p> */}
           </div>
         ))
       )}

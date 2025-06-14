@@ -1,7 +1,7 @@
 import Header from "../Components/Header";
 import Preview from "../Components/Preview";
 import SideBar from "../Components/SideBar/SideBar";
-import TimeLine from "../Components/TimeLine";
+import TimeLine from "../Components/TimeLine/TimeLine";
 
 const Editor = () => {
     return (

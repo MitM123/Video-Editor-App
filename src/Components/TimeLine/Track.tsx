@@ -1,0 +1,117 @@
+import { Image, Music, Play, Type } from 'lucide-react';
+import React from 'react';
+import { FaPlay } from 'react-icons/fa6';
+
+interface Clip {
+    id: string;
+    type: 'text' | 'video' | 'audio' | 'image';
+    name: string;
+    startTime: number;
+    duration: number;
+    trackId: string;
+    src?: string;
+}
+
+
+interface TrackProps {
+    track: {
+        id: string;
+        name: string;
+        type: 'text' | 'video' | 'audio' | 'image';
+        clips: Clip[];
+    };
+    pixelsPerSecond: number;
+    onClipMouseDown: (e: React.MouseEvent, clipId: string) => void;
+    trackIndex: number;
+}
+
+const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackProps) => {
+    return (
+        <div
+            className="relative h-12 border-b"
+            style={{
+                backgroundColor: trackIndex % 2 === 0 ? '#ffffff' : '#f8f9fa',
+                borderColor: '#e9ebed'
+            }}
+        >
+            <div className="h-full relative">
+                {track.clips.map(clip => {
+                    let clipContent;
+                    let clipStyle = {
+                        left: `${clip.startTime * pixelsPerSecond}px`,
+                        width: `${clip.duration * pixelsPerSecond}px`
+                    };
+
+                    if (clip.type === 'text') {
+                        clipContent = (
+                            <div className="h-full flex items-center justify-center px-2 text-white bg-gray-500 font-medium text-xs rounded">
+                                <Type className="w-3 h-3 mr-1" />
+                                {clip.name}
+                            </div>
+                        );
+                    } else if (clip.type === 'video') {
+                        clipContent = (
+                            <div className="h-full flex items-center justify-center rounded overflow-hidden bg-gray-300">
+                                {clip.src ? (
+                                    <video
+                                        src={clip.src}
+                                        className="h-full w-full object-cover"
+                                        muted
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-500">
+                                            <FaPlay className="w-3 h-3 text-white" />
+                                        </div>
+                                        <div className="w-6 h-6 rounded-full flex items-center justify-center ml-1 bg-gray-500">
+                                            <Play className="w-2 h-2 text-white" />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    } else if (clip.type === 'audio') {
+                        clipContent = (
+                            <div className="h-full flex items-center px-2 rounded bg-green-400">
+                                <Music className="w-3 h-3 text-white mr-1" />
+                                <span className="text-white text-xs font-medium">{clip.name}</span>
+                                <div className="flex items-center space-x-0.5 ml-2">
+                                    {Array.from({ length: Math.floor(clip.duration * 8) }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="w-0.5 bg-white opacity-60 rounded-full"
+                                            style={{ height: `${Math.random() * 12 + 4}px` }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    } else if (clip.type === 'image') {
+                        clipContent = (
+                            <div className="h-full rounded overflow-hidden" style={{ backgroundColor: '#dee1e3' }}>
+                                <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center">
+                                    <div className="w-8 h-6 bg-white rounded shadow-sm flex items-center justify-center">
+                                        <Image className="w-3 h-3 text-gray-400" />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div
+                            key={clip.id}
+                            className="absolute top-1 bottom-1 cursor-move select-none"
+                            style={clipStyle}
+                            onMouseDown={(e) => onClipMouseDown(e, clip.id)}
+                        >
+                            {clipContent}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+export default Track;
