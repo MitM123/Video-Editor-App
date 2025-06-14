@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Plus, Minus, Type, Video, Music, Image, RotateCcw } from 'lucide-react';
 
 interface Clip {
@@ -25,7 +25,7 @@ const Timeline = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
 
-  const totalDuration = 24; // 24 seconds total
+  const totalDuration = 24;
   const pixelsPerSecond = 50 * timelineScale;
 
   const [tracks, setTracks] = useState<Track[]>([
@@ -75,21 +75,23 @@ const Timeline = () => {
   ]);
 
   // Playback simulation
-  // useEffect(() => {
-  //   let interval: NodeJS.Timeout | null = null;
-  //   if (isPlaying) {
-  //     interval = setInterval(() => {
-  //       setCurrentTime(prev => {
-  //         if (prev >= totalDuration) {
-  //           setIsPlaying(false);
-  //           return 0;
-  //         }
-  //         return prev + 0.1;
-  //       });
-  //     }, 100);
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [isPlaying, totalDuration]);
+  useEffect(() => {
+    let interval: number | null = null;  
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentTime(prev => {
+          if (prev >= totalDuration) {
+            setIsPlaying(false);
+            return 0;
+          }
+          return prev + 0.1;
+        });
+      }, 100);
+    }
+    return () => {
+      if (interval) clearInterval(interval);  
+    };
+  }, [isPlaying, totalDuration]);
 
   const togglePlayback = () => {
     setIsPlaying(!isPlaying);
@@ -145,7 +147,6 @@ const Timeline = () => {
 
   const zoomIn = () => setTimelineScale(prev => Math.min(prev * 1.5, 3));
   const zoomOut = () => setTimelineScale(prev => Math.max(prev / 1.5, 0.5));
-  const fitView = () => setTimelineScale(1);
 
   const addClip = () => {
     const newClip: Clip = {
@@ -172,9 +173,8 @@ const Timeline = () => {
   }
 
   return (
-    <div className="w-full h-full bg-white font-dmsans flex flex-col overflow-y-auto">
-      {/* Header Controls */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b">
+    <div className="w-full h-full  bg-white font-dmsans flex flex-col overflow-y-auto">
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-black rounded-full"></div>
@@ -225,8 +225,8 @@ const Timeline = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="relative bg-white border-b h-8 overflow-x-auto" style={{ borderColor: '#e9ebed' }}>
+      <div className=" flex flex-col overflow-hidden">
+        <div className="relative bg-white border-b border-gray-200 h-8 overflow-x-auto">
           <div
             className="relative h-full"
             style={{ width: `${totalDuration * pixelsPerSecond}px` }}
@@ -257,7 +257,7 @@ const Timeline = () => {
           <div
             ref={timelineRef}
             className="relative bg-white"
-            style={{ width: `${totalDuration * pixelsPerSecond}px`, minHeight: '400px' }}
+            style={{ width: `${totalDuration * pixelsPerSecond}px` }}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onClick={handleTimelineClick}
@@ -272,8 +272,8 @@ const Timeline = () => {
 
             <div
               className="absolute top-0 bottom-0 bg-blue-100 opacity-50 border-l-2 border-blue-500 z-10"
-              style={{ left: '0px', width: `${4 * pixelsPerSecond}px` }}
-            ></div>
+              style={{ left: '0px', width: `${4 * pixelsPerSecond}px` }}>
+            </div>
 
             {tracks.map((track, trackIndex) => (
               <div
@@ -294,31 +294,27 @@ const Timeline = () => {
 
                     if (clip.type === 'text') {
                       clipContent = (
-                        <div className="h-full flex items-center justify-center px-2 text-white font-medium text-sm rounded"
-                          style={{ backgroundColor: '#9ca3af' }}>
+                        <div className="h-full flex items-center justify-center px-2 text-white bg-gray-500 font-medium text-xs rounded">
                           <Type className="w-3 h-3 mr-1" />
                           {clip.name}
                         </div>
                       );
                     } else if (clip.type === 'video') {
                       clipContent = (
-                        <div className="h-full flex items-center justify-center rounded overflow-hidden"
-                          style={{ backgroundColor: '#dee1e3' }}>
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#9ca3af' }}>
+                        <div className="h-full flex items-center justify-center rounded overflow-hidden bg-gray-300">
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-500" >
                             <Video className="w-3 h-3 text-white" />
                           </div>
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center ml-1" style={{ backgroundColor: '#6b7280' }}>
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center ml-1 bg-gray-500">
                             <Play className="w-2 h-2 text-white" />
                           </div>
                         </div>
                       );
                     } else if (clip.type === 'audio') {
                       clipContent = (
-                        <div className="h-full flex items-center px-2 rounded"
-                          style={{ backgroundColor: '#22c55e' }}>
+                        <div className="h-full flex items-center px-2 rounded bg-green-400">
                           <Music className="w-3 h-3 text-white mr-1" />
                           <span className="text-white text-xs font-medium">{clip.name}</span>
-                          {/* Waveform visualization */}
                           <div className="flex items-center space-x-0.5 ml-2">
                             {Array.from({ length: Math.floor(clip.duration * 8) }).map((_, i) => (
                               <div
