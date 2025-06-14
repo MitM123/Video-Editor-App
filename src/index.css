@@ -9,3 +9,7 @@
   --font-monasans: 'Mona Sans', sans-serif;
   --font-dmsans: 'DM Sans', sans-serif;
 }
+
+::-webkit-scrollbar {
+  display: none;
+}

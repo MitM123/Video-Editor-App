@@ -1,7 +1,7 @@
-import Header from "../Components/Header"
-import Preview from "../Components/Preview"
-import SideBar from "../Components/SideBar"
-import TimeLine from "../Components/TimeLine"
+import Header from "../Components/Header";
+import Preview from "../Components/Preview";
+import SideBar from "../Components/SideBar/SideBar";
+import TimeLine from "../Components/TimeLine";
 
 const Editor = () => {
     return (
@@ -10,17 +10,17 @@ const Editor = () => {
                 <Header />
             </div>
 
-            <div className="flex w-full h-full">
-                <div>
+            <div className="flex flex-1 w-full overflow-hidden">
+                <div className="flex h-full">
                     <SideBar />
                 </div>
 
-                <div className="flex flex-col flex-1 min-w-0">
-                    <div className="flex-1 bg-primary overflow-hidden">
+                <div className="flex flex-col flex-1 h-full overflow-hidden">
+                    <div className="flex-1 bg-primary overflow-auto">
                         <Preview />
                     </div>
 
-                    <div className="h-48 bg-secondary  overflow-y-auto shadow-inner">
+                    <div className="h-40 bg-secondary overflow-y-auto shadow-inner">
                         <TimeLine />
                     </div>
                 </div>
@@ -29,4 +29,4 @@ const Editor = () => {
     )
 }
 
-export default Editor
+export default Editor;
