@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../Slices/store';
 import TimelineControls from './TimeLineControls';
@@ -31,13 +31,23 @@ const Timeline: React.FC = () => {
   const [draggedClip, setDraggedClip] = useState<{ clipId: string; offset: number } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
-  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
 
   const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
-  const totalDuration = 24;
+  console.log('Uploaded Videos:', uploadedVideos);
+
+  const totalDuration = useMemo(() => {
+    if (!uploadedVideos || uploadedVideos.length === 0) return 10;
+    const calculatedDuration = uploadedVideos.reduce((max, video) => {
+      const start = 0;
+      const end = start + video.duration;
+      return Math.max(max, end);
+    }, 0);
+    // console.log('Calculated Duration:', calculatedDuration);
+    return calculatedDuration;
+  }, [uploadedVideos]);
+
   const pixelsPerSecond = 50 * timelineScale;
 
-  // Initialize tracks with uploaded videos
   const [tracks, setTracks] = useState<TrackType[]>([
     {
       id: 'video-1',
@@ -53,10 +63,10 @@ const Timeline: React.FC = () => {
         src: video.url
       }))
     },
-    // Add other track types as needed
+
   ]);
 
-  // Playback simulation
+
   useEffect(() => {
     let interval: number | null = null;
     if (isPlaying) {

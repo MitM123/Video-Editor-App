@@ -3,6 +3,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 interface VideoItem {
   url: string;
   name: string;
+  duration: number;
 }
 
 interface VideoState {
@@ -21,18 +22,11 @@ const videoSlice = createSlice({
       state.uploadedVideos.push(...action.payload);
     },
     removeVideo: (state, action: PayloadAction<number>) => {
-      const videoToRemove = state.uploadedVideos[action.payload];
-      if (videoToRemove) {
-        URL.revokeObjectURL(videoToRemove.url);
-      }
+      URL.revokeObjectURL(state.uploadedVideos[action.payload].url);
       state.uploadedVideos.splice(action.payload, 1);
-    },
-    clearVideos: (state) => {
-      state.uploadedVideos.forEach(video => URL.revokeObjectURL(video.url));
-      state.uploadedVideos = [];
-    },
+    }
   },
 });
 
-export const { addVideos, removeVideo, clearVideos } = videoSlice.actions;
+export const { addVideos, removeVideo } = videoSlice.actions;
 export default videoSlice.reducer;

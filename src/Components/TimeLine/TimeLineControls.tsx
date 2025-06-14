@@ -20,6 +20,7 @@ const TimelineControls = ({
     onZoomIn,
     onZoomOut,
 }: TimelineControlsProps) => {
+    
     const formatTime = (totalSeconds: number): string => {
 
         const hours = Math.floor(totalSeconds / 3600);

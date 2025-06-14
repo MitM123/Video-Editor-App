@@ -28,7 +28,7 @@ interface TrackProps {
 const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackProps) => {
     return (
         <div
-            className="relative h-12 border-b"
+            className="relative h-24 border-b w-full"
             style={{
                 backgroundColor: trackIndex % 2 === 0 ? '#ffffff' : '#f8f9fa',
                 borderColor: '#e9ebed'
@@ -55,8 +55,13 @@ const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackPro
                                 {clip.src ? (
                                     <video
                                         src={clip.src}
-                                        className="h-full w-full object-cover"
+                                        className="h-full w-full object-cover pointer-events-none"
                                         muted
+                                        playsInline
+                                        preload="auto"
+                                        disablePictureInPicture
+                                        disableRemotePlayback
+                                        controls={false}
                                     />
                                 ) : (
                                     <>

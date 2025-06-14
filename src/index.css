@@ -13,3 +13,13 @@
 ::-webkit-scrollbar {
   display: none;
 }
+
+video {
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+video::-webkit-media-controls {
+  display: none !important;
+}
