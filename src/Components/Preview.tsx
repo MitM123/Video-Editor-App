@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../Slices/store';
+import PreviewMedia from '../Components/Preview/PreviewMedia';
 
 export const videoRefs: Record<number, React.RefObject<HTMLVideoElement | null>> = {};
+export const imageRefs: Record<number, React.RefObject<HTMLImageElement | null>> = {};
 
 const Preview = () => {
   const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
+  const uploadedImages = useSelector((state: RootState) => state.image.uploadedImages);
+  const stickers = useSelector((state: RootState) => state.sticker.stickers);
 
   useEffect(() => {
     uploadedVideos.forEach((_, index) => {
@@ -13,64 +17,22 @@ const Preview = () => {
         videoRefs[index] = React.createRef<HTMLVideoElement>();
       }
     });
-  }, [uploadedVideos]);
 
-  const getVideoStyle = (video: any) => {
-    const FILTER_STYLES: Record<string, string> = {
-      none: 'none', 
-      grayscale: 'grayscale(100%)',
-      sepia: 'sepia(100%)',
-      blur: 'blur(5px)',
-      brightness: 'brightness(1.5)',
-      contrast: 'contrast(1.5)'
-    };
+    uploadedImages.forEach((_, index) => {
+      if (!imageRefs[index]) {
+        imageRefs[index] = React.createRef<HTMLImageElement>();
+      }
+    });
+  }, [uploadedVideos, uploadedImages]);
 
-    const EFFECT_STYLES: Record<string, string> = {
-      none: 'none',
-      vintage: 'sepia(70%) brightness(80%) contrast(120%)',
-      cool: 'brightness(90%) contrast(110%) hue-rotate(180deg)',
-      warm: 'brightness(110%) contrast(90%) hue-rotate(-20deg)',
-      cinematic: 'contrast(130%) brightness(90%) saturate(110%)',
-      bw: 'grayscale(100%) contrast(120%)'
-    };
-
-    const filterStyle = video.appliedFilter ? FILTER_STYLES[video.appliedFilter] || 'none' : 'none';
-    const effectStyle = video.appliedEffect ? EFFECT_STYLES[video.appliedEffect] || 'none' : 'none';
-
-    return filterStyle !== 'none' ? filterStyle : effectStyle;
-  };
+  const hasMedia = uploadedVideos.length > 0 || uploadedImages.length > 0 || stickers.length > 0;
 
   return (
-    <div className="flex flex-col items-center justify-cente font-monasans font-semibold p-4">
-      {uploadedVideos.length === 0 ? (
-        <p className="text-gray-600 text-lg">No videos uploaded yet.</p>
+    <div className="relative flex flex-col items-center justify-center font-monasans font-semibold p-4 min-h-[500px]">
+      {!hasMedia ? (
+        <p className="text-gray-600 text-lg">No media uploaded yet.</p>
       ) : (
-        uploadedVideos.map((video, index) => (
-          <div key={index} className="mb-6">
-            <video
-              ref={el => {
-                if (videoRefs[index]) {
-                  videoRefs[index].current = el;
-                  if (el) {
-                    el.muted = false;
-                    el.playsInline = true;
-                  }
-                }
-              }}
-              width="480"
-              height="120"
-              controls
-              className="rounded-lg shadow-lg"
-              style={{
-                filter: getVideoStyle(video)
-              }}
-            >
-              <source src={video.url} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            {/* <p className="text-center mt-2 text-gray-800 font-medium">{video.name}</p> */}
-          </div>
-        ))
+        <PreviewMedia />
       )}
     </div>
   );
