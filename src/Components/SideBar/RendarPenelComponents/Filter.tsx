@@ -1,14 +1,7 @@
-import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../../Slices/store';
 import { setVideoFilter } from '../../../Slices/Video/Video.slice';
 
-interface VideoItem {
-  url: string;
-  name: string;
-  duration: number;
-  appliedFilter?: string;
-}
 
 interface FilterOption {
   name: string;

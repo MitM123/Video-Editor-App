@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-    Layers3,
     Upload,
     Play,
     Music2,

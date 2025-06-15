@@ -1,13 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import type { RootState } from '../../Slices/store';
-import { updateShapePosition, deleteShape } from '../../Slices/Shapes/Shape.slice'; 
+import { updateShapePosition, deleteShape } from '../../Slices/Shapes/Shape.slice';
 
 const PreviewShapes = () => {
     const dispatch = useDispatch();
     const shapes = useSelector((state: RootState) => state.shapes.shapes);
 
-    const handleDragEnd = (id: string, event: any, info: any) => {
+    const handleDragEnd = (id: string, info: any) => {
         dispatch(updateShapePosition({
             id,
             position: {
@@ -62,7 +62,7 @@ const PreviewShapes = () => {
                     }}
                     drag
                     dragConstraints={{ left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight }}
-                    onDragEnd={(e, info) => handleDragEnd(shape.id, e, info)}
+                    onDragEnd={(_, info) => handleDragEnd(shape.id, info)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >

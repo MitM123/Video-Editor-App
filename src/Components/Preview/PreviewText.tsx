@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import type { RootState } from '../../Slices/store';
@@ -64,7 +64,7 @@ const PreviewText = () => {
                     }}
                     drag
                     dragConstraints={{ left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight }}
-                    onDragEnd={(e, info) => handleDragEnd(text.id, info)}
+                    onDragEnd={(_, info) => handleDragEnd(text.id, info)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                 >

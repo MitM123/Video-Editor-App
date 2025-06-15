@@ -1,14 +1,6 @@
-import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../../Slices/store';
 import { setVideoEffect } from '../../../Slices/Video/Video.slice';
-
-interface VideoItem {
-  url: string;
-  name: string;
-  duration: number;
-  appliedEffect?: string;
-}
 
 interface EffectOption {
   name: string;

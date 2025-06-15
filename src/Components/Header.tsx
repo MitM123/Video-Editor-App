@@ -39,7 +39,7 @@ const Header = () => {
                 videoElement.onloadedmetadata = resolve;
             });
 
-            const processedUrl = await processVideo(videoElement, quality);
+            const processedUrl = await processVideo(videoElement);
 
             setProcessedVideo({
                 url: processedUrl,
@@ -54,7 +54,7 @@ const Header = () => {
         }
     };
 
-    const processVideo = async (videoElement: HTMLVideoElement, quality: string): Promise<string> => {
+    const processVideo = async (videoElement: HTMLVideoElement): Promise<string> => {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve(videoElement.src);

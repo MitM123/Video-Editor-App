@@ -1,4 +1,3 @@
-import React from 'react';
 import PreviewVideos from './PreviewVideos';
 import PreviewImages from './PreviewImages';
 import PreviewStickers from './PreviewStickers';
