@@ -5,50 +5,25 @@ import TimelineControls from './TimeLineControls';
 import TimelineHeader from './TimeLineHeader';
 import Track from './Track';
 import { videoRefs } from '../Preview';
-
-interface Clip {
-  id: string;
-  type: 'text' | 'video' | 'audio' | 'image';
-  name: string;
-  startTime: number;
-  duration: number;
-  trackId: string;
-  src?: string;
-}
-
-
-interface TrackType {
-  id: string;
-  name: string;
-  type: 'video' | 'audio' | 'text' | 'image';
-  clips: Clip[];
-}
-
+import type { TrackType } from '../../Components/types';
 
 const Timeline = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [timelineScale, setTimelineScale] = useState(1);
   const [draggedClip, setDraggedClip] = useState<{ clipId: string; offset: number } | null>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>(0);
 
   const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
-  console.log('Uploaded Videos:', uploadedVideos);
-
-  const totalDuration = useMemo(() => {
-    if (!uploadedVideos || uploadedVideos.length === 0) return 10;
-    const calculatedDuration = uploadedVideos.reduce((max, video) => {
-      const start = 0;
-      const end = start + video.duration;
-      return Math.max(max, end);
-    }, 0);
-    // console.log('Calculated Duration:', calculatedDuration);
-    return calculatedDuration;
-  }, [uploadedVideos]);
-
   const pixelsPerSecond = 50 * timelineScale;
+
+  const totalDuration = useMemo(() => (
+    uploadedVideos?.length ?
+      Math.max(...uploadedVideos.map(v => v.duration), 10) : 10
+  ), [uploadedVideos]);
 
   const [tracks, setTracks] = useState<TrackType[]>([
     {
@@ -64,13 +39,11 @@ const Timeline = () => {
         trackId: 'video-1',
         src: video.url
       }))
-    },
-
+    }
   ]);
 
-
   useEffect(() => {
-    const videoTrack: TrackType = {
+    setTracks([{
       id: 'video-1',
       name: 'Video Track',
       type: 'video',
@@ -83,16 +56,13 @@ const Timeline = () => {
         trackId: 'video-1',
         src: video.url
       }))
-    };
-    setTracks([videoTrack]);
+    }]);
   }, [uploadedVideos]);
 
   useEffect(() => {
     if (!isPlaying) {
       Object.values(videoRefs).forEach(ref => {
-        if (ref.current) {
-          ref.current.currentTime = currentTime;
-        }
+        ref.current && (ref.current.currentTime = currentTime);
       });
     }
   }, [currentTime, isPlaying]);
@@ -100,49 +70,30 @@ const Timeline = () => {
   useEffect(() => {
     const updateCurrentTime = () => {
       if (isPlaying) {
-        let minTime = Infinity;
-        Object.values(videoRefs).forEach(ref => {
-          if (ref.current && !ref.current.paused) {
-            minTime = Math.min(minTime, ref.current.currentTime);
-          }
-        });
-        if (minTime !== Infinity) {
-          setCurrentTime(minTime);
-        }
+        const minTime = Math.min(...Object.values(videoRefs)
+          .filter(ref => ref.current && !ref.current.paused)
+          .map(ref => ref.current!.currentTime));
+
+        if (minTime !== Infinity) setCurrentTime(minTime);
         animationFrameRef.current = requestAnimationFrame(updateCurrentTime);
       }
     };
 
-    if (isPlaying) {
-      animationFrameRef.current = requestAnimationFrame(updateCurrentTime);
-    } else if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
+    isPlaying
+      ? animationFrameRef.current = requestAnimationFrame(updateCurrentTime)
+      : cancelAnimationFrame(animationFrameRef.current);
 
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
+    return () => cancelAnimationFrame(animationFrameRef.current);
   }, [isPlaying]);
-
 
   const togglePlayback = () => {
     setIsPlaying(prev => {
-      const nextState = !prev;
-
       Object.values(videoRefs).forEach(ref => {
         if (ref.current) {
-          if (nextState) {
-            ref.current.currentTime = currentTime;
-            ref.current.play();
-          } else {
-            ref.current.pause();
-            setCurrentTime(ref.current.currentTime);
-          }
+          prev ? ref.current.pause() : (ref.current.currentTime = currentTime, ref.current.play());
         }
       });
-      return nextState;
+      return !prev;
     });
   };
 
@@ -151,39 +102,37 @@ const Timeline = () => {
 
   const handleTimelineClick = (e: React.MouseEvent) => {
     if (timelineRef.current) {
-      const rect = timelineRef.current.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const newTime = (clickX / pixelsPerSecond);
-      setCurrentTime(Math.max(0, Math.min(newTime, totalDuration)));
+      const newTime = Math.max(0, Math.min(
+        (e.clientX - timelineRef.current.getBoundingClientRect().left) / pixelsPerSecond,
+        totalDuration
+      ));
+      setCurrentTime(newTime);
     }
   };
 
   const handleClipMouseDown = (e: React.MouseEvent, clipId: string) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
-    const offset = e.clientX - rect.left;
-    setDraggedClip({ clipId, offset });
+    setDraggedClip({ clipId, offset: e.clientX - rect.left });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggedClip && timelineRef.current) {
-      const rect = timelineRef.current.getBoundingClientRect();
-      const newPosition = (e.clientX - rect.left - draggedClip.offset) / pixelsPerSecond;
-
-      setTracks(prevTracks =>
-        prevTracks.map(track => ({
-          ...track,
-          clips: track.clips.map(clip =>
-            clip.id === draggedClip.clipId
-              ? { ...clip, startTime: Math.max(0, newPosition) }
-              : clip
-          )
-        }))
-      );
+      const newPosition = (e.clientX - timelineRef.current.getBoundingClientRect().left - draggedClip.offset) / pixelsPerSecond;
+      setTracks(prevTracks => prevTracks.map(track => ({
+        ...track,
+        clips: track.clips.map(clip =>
+          clip.id === draggedClip.clipId ? { ...clip, startTime: Math.max(0, newPosition) } : clip
+        )
+      })));
     }
   };
 
-  const handleMouseUp = () => setDraggedClip(null);
+  useEffect(() => {
+    Object.values(videoRefs).forEach(ref => {
+      ref.current && (ref.current.playbackRate = playbackSpeed);
+    });
+  }, [playbackSpeed]);
 
   return (
     <div className="w-full h-full bg-white font-dmsans flex flex-col overflow-y-auto">
@@ -195,6 +144,7 @@ const Timeline = () => {
         onPlayPause={togglePlayback}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
+        onPlaybackSpeedChange={setPlaybackSpeed}
       />
 
       <div className="flex flex-col overflow-hidden relative">
@@ -222,7 +172,7 @@ const Timeline = () => {
             className="relative bg-white"
             style={{ width: `${totalDuration * pixelsPerSecond}px` }}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            onMouseUp={() => setDraggedClip(null)}
             onClick={handleTimelineClick}
           >
             {tracks.map((track, trackIndex) => (

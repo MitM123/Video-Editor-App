@@ -11,16 +11,10 @@ interface TimelineControlsProps {
     onPlayPause: () => void;
     onZoomIn: () => void;
     onZoomOut: () => void;
+    onPlaybackSpeedChange: (speed: number) => void;
 }
 
-const TimelineControls = ({
-    isPlaying,
-    currentTime,
-    totalDuration,
-    onPlayPause,
-    onZoomIn,
-    onZoomOut,
-}: TimelineControlsProps) => {
+const TimelineControls = ({ isPlaying, currentTime, totalDuration, onPlayPause, onZoomIn, onZoomOut, onPlaybackSpeedChange }: TimelineControlsProps) => {
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
@@ -43,7 +37,6 @@ const TimelineControls = ({
     };
 
     const formatTime = (totalSeconds: number): string => {
-
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = Math.floor(totalSeconds % 60);
@@ -54,6 +47,7 @@ const TimelineControls = ({
             seconds.toString().padStart(2, '0')
         ].join(':');
     };
+
     return (
         <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
             <div className="flex items-center space-x-4">
@@ -87,20 +81,25 @@ const TimelineControls = ({
 
             <div className="flex items-center space-x-3">
                 <span className="text-xs font-semibold text-gray-500">Timeline Scale</span>
-                <button
-                    onClick={onZoomOut}
-                    className="w-6 h-6 flex items-center justify-center border rounded hover:bg-gray-50"
-                    style={{ borderColor: '#dee1e3' }}
-                >
+                <button onClick={onZoomOut} className="w-6 h-6 flex items-center justify-center border rounded hover:bg-gray-50" style={{ borderColor: '#dee1e3' }}>
                     <Minus className="w-3 h-3 text-gray-600" />
                 </button>
-                <button
-                    onClick={onZoomIn}
-                    className="w-6 h-6 flex items-center justify-center border rounded hover:bg-gray-50"
-                    style={{ borderColor: '#dee1e3' }}
-                >
+                <button onClick={onZoomIn} className="w-6 h-6 flex items-center justify-center border rounded hover:bg-gray-50" style={{ borderColor: '#dee1e3' }}>
                     <Plus className="w-3 h-3 text-gray-600" />
                 </button>
+
+                <select
+                    onChange={(e) => onPlaybackSpeedChange(parseFloat(e.target.value))}
+                    className="text-xs border rounded px-2 py-1 focus:outline-none"
+                    defaultValue="1"
+                >
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1">1x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2">2x</option>
+                </select>
             </div>
         </div>
     );

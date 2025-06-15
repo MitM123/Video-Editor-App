@@ -6,7 +6,7 @@ export interface VideoItem {
   duration: number;
   appliedFilter?: string;
   appliedEffect?: string;
-  processedUrl?: string;  // this holds the processed video blob URL
+  processedUrl?: string; 
 }
 
 interface VideoState {
