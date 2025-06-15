@@ -67,3 +67,7 @@ git clone https://github.com/MitM123/Video-Editor-App
 cd Video-Editor-App
 npm install
 npm run dev
+
+🔗 Live Preview
+Check out the live version here:
+👉 https://video-editor-app-olive.vercel.app/
