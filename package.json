@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.7.0",
+    "@ffmpeg/util": "^0.12.2",
     "@reduxjs/toolkit": "^2.8.2",
     "@remotion/renderer": "^4.0.314",
     "@tailwindcss/postcss": "^4.1.10",
+    "@types/ffmpeg": "^1.0.7",
     "framer-motion": "^12.18.1",
     "lucide-react": "^0.515.0",
     "postcss": "^8.5.5",

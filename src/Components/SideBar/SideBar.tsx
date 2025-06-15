@@ -19,11 +19,6 @@ const SideBar = () => {
 
     const sidebarItems = [
         {
-            id: 'elements',
-            icon: Layers3,
-            label: 'Elements'
-        },
-        {
             id: 'uploads',
             icon: Upload,
             label: 'Uploads'
@@ -40,7 +35,7 @@ const SideBar = () => {
         },
         {
             id: 'effects',
-            icon: Sparkles, 
+            icon: Sparkles,
             label: 'Effects'
         },
         {
