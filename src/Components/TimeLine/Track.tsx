@@ -1,5 +1,5 @@
 import { Image, Music, Play, Type } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaPlay } from 'react-icons/fa6';
 
 interface Clip {
@@ -11,7 +11,6 @@ interface Clip {
     trackId: string;
     src?: string;
 }
-
 
 interface TrackProps {
     track: {
@@ -26,9 +25,65 @@ interface TrackProps {
 }
 
 const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackProps) => {
+    const [clipFrames, setClipFrames] = useState<Record<string, string[]>>({});
+    const [isPreparing, setPreparing] = useState(true)
+
+    const extractFrames = async (clip: Clip) => {
+        if (!clip.src) return;
+
+        const video = document.createElement('video');
+        video.src = clip.src;
+        video.crossOrigin = 'anonymous';
+
+        await new Promise(resolve => {
+            video.onloadedmetadata = resolve;
+        });
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const frameInterval = 4;
+        const totalDuration = video.duration;
+        console.log(totalDuration);
+
+        const numFrames = Math.floor(totalDuration / frameInterval);
+
+        const targetWidth = 480;
+        const scale = targetWidth / video.videoWidth;
+        canvas.width = targetWidth;
+        canvas.height = video.videoHeight * scale;
+
+        const frames: string[] = [];
+
+        for (let i = 0; i < numFrames; i++) {
+            const time = i * frameInterval;
+            await new Promise<void>((resolve) => {
+                video.currentTime = time;
+                video.onseeked = () => {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    frames.push(canvas.toDataURL());
+                    resolve();
+                };
+            });
+        }
+
+        setClipFrames(prev => ({ ...prev, [clip.id]: frames }));
+        setPreparing(false)
+    };
+
+    useEffect(() => {
+        console.log("Track array", track)
+        track.clips.forEach(clip => {
+            if (clip.type === 'video' && clip.src && !clipFrames[clip.id]) {
+                extractFrames(clip);
+            }
+        });
+    }, [track.clips]);
+
     return (
         <div
-            className="relative h-24 border-b w-full"
+            className="relative h-24 border-b w-full mx-2"
             style={{
                 backgroundColor: trackIndex % 2 === 0 ? '#ffffff' : '#f8f9fa',
                 borderColor: '#e9ebed'
@@ -50,31 +105,44 @@ const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackPro
                             </div>
                         );
                     } else if (clip.type === 'video') {
-                        clipContent = (
-                            <div className="h-full flex items-center justify-center rounded overflow-hidden bg-gray-300">
-                                {clip.src ? (
-                                    <video
-                                        src={clip.src}
-                                        className="h-full w-full object-cover pointer-events-none"
-                                        muted
-                                        playsInline
-                                        preload="auto"
-                                        disablePictureInPicture
-                                        disableRemotePlayback
-                                        controls={false}
-                                    />
-                                ) : (
-                                    <>
-                                        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-500">
-                                            <FaPlay className="w-3 h-3 text-white" />
+                        if (isPreparing) {
+                            clipContent = (
+                                <div className='flex items-center h-full '>
+                                    <h1 className='text-start text-xl text-black'>Preparing...</h1>
+                                </div>
+                            )
+                        } else {
+                            const frames = clipFrames[clip.id] || [];
+
+                            clipContent = (
+                                <div className="h-full w-full flex items-center justify-center rounded overflow-hidden bg-gray-200">
+                                    {frames.length > 0 ? (
+                                        <div className="flex w-full h-full space-x-1">
+                                            {frames.map((frame, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={frame}
+                                                    alt={`frame-${i}`}
+                                                    className="h-full w-full object-cover rounded-md border border-blue-700"
+                                                    style={{ width: `${pixelsPerSecond * 4}px` }}
+                                                />
+                                            ))}
+
                                         </div>
-                                        <div className="w-6 h-6 rounded-full flex items-center justify-center ml-1 bg-gray-500">
-                                            <Play className="w-2 h-2 text-white" />
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        );
+                                    ) : (
+                                        <>
+                                            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-500">
+                                                <FaPlay className="w-3 h-3 text-white" />
+                                            </div>
+                                            <div className="w-6 h-6 rounded-full flex items-center justify-center ml-1 bg-gray-500">
+                                                <Play className="w-2 h-2 text-white" />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        }
+
                     } else if (clip.type === 'audio') {
                         clipContent = (
                             <div className="h-full flex items-center px-2 rounded bg-green-400">

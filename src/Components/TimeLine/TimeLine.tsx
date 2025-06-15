@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../Slices/store';
 import TimelineControls from './TimeLineControls';
 import TimelineHeader from './TimeLineHeader';
 import Track from './Track';
+import { videoRefs } from '../Preview';
 
 interface Clip {
   id: string;
@@ -24,13 +25,14 @@ interface TrackType {
 }
 
 
-const Timeline: React.FC = () => {
+const Timeline = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [timelineScale, setTimelineScale] = useState(1);
   const [draggedClip, setDraggedClip] = useState<{ clipId: string; offset: number } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number>(0);
 
   const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
   console.log('Uploaded Videos:', uploadedVideos);
@@ -58,7 +60,7 @@ const Timeline: React.FC = () => {
         type: 'video',
         name: video.name,
         startTime: index * 3,
-        duration: 3,
+        duration: video.duration,
         trackId: 'video-1',
         src: video.url
       }))
@@ -68,24 +70,82 @@ const Timeline: React.FC = () => {
 
 
   useEffect(() => {
-    let interval: number | null = null;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev >= totalDuration) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 0.1;
-        });
-      }, 100);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
+    const videoTrack: TrackType = {
+      id: 'video-1',
+      name: 'Video Track',
+      type: 'video',
+      clips: uploadedVideos.map((video, index) => ({
+        id: `video-clip-${index}`,
+        type: 'video',
+        name: video.name,
+        startTime: index * 3,
+        duration: video.duration,
+        trackId: 'video-1',
+        src: video.url
+      }))
     };
-  }, [isPlaying, totalDuration]);
+    setTracks([videoTrack]);
+  }, [uploadedVideos]);
 
-  const togglePlayback = () => setIsPlaying(!isPlaying);
+  useEffect(() => {
+    if (!isPlaying) {
+      Object.values(videoRefs).forEach(ref => {
+        if (ref.current) {
+          ref.current.currentTime = currentTime;
+        }
+      });
+    }
+  }, [currentTime, isPlaying]);
+
+  useEffect(() => {
+    const updateCurrentTime = () => {
+      if (isPlaying) {
+        let minTime = Infinity;
+        Object.values(videoRefs).forEach(ref => {
+          if (ref.current && !ref.current.paused) {
+            minTime = Math.min(minTime, ref.current.currentTime);
+          }
+        });
+        if (minTime !== Infinity) {
+          setCurrentTime(minTime);
+        }
+        animationFrameRef.current = requestAnimationFrame(updateCurrentTime);
+      }
+    };
+
+    if (isPlaying) {
+      animationFrameRef.current = requestAnimationFrame(updateCurrentTime);
+    } else if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPlaying]);
+
+
+  const togglePlayback = () => {
+    setIsPlaying(prev => {
+      const nextState = !prev;
+
+      Object.values(videoRefs).forEach(ref => {
+        if (ref.current) {
+          if (nextState) {
+            ref.current.currentTime = currentTime;
+            ref.current.play();
+          } else {
+            ref.current.pause();
+            setCurrentTime(ref.current.currentTime);
+          }
+        }
+      });
+      return nextState;
+    });
+  };
+
   const zoomIn = () => setTimelineScale(prev => Math.min(prev * 1.5, 3));
   const zoomOut = () => setTimelineScale(prev => Math.max(prev / 1.5, 0.5));
 
@@ -123,6 +183,9 @@ const Timeline: React.FC = () => {
     }
   };
 
+
+
+
   const handleMouseUp = () => setDraggedClip(null);
 
   return (
@@ -137,13 +200,26 @@ const Timeline: React.FC = () => {
         onZoomOut={zoomOut}
       />
 
-      <div className="flex flex-col overflow-hidden">
+      <div className="flex flex-col overflow-hidden relative">
+        <div
+          ref={playheadRef}
+          className="absolute left-0 w-0.5 bg-blue-500 z-50 pointer-events-none"
+          style={{
+            top: '0',
+            bottom: '0',
+            transform: `translateX(${currentTime * pixelsPerSecond}px)`
+          }}
+        >
+          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+        </div>
+
         <TimelineHeader
           totalDuration={totalDuration}
           pixelsPerSecond={pixelsPerSecond}
+          currentTime={currentTime}
         />
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto relative z-30">
           <div
             ref={timelineRef}
             className="relative bg-white"
@@ -152,14 +228,6 @@ const Timeline: React.FC = () => {
             onMouseUp={handleMouseUp}
             onClick={handleTimelineClick}
           >
-            <div
-              ref={playheadRef}
-              className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 pointer-events-none"
-              style={{ left: `${currentTime * pixelsPerSecond}px` }}
-            >
-              <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-            </div>
-
             {tracks.map((track, trackIndex) => (
               <Track
                 key={track.id}
