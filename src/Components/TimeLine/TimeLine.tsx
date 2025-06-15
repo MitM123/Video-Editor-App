@@ -200,7 +200,7 @@ const Timeline = () => {
       <div className="flex flex-col overflow-hidden relative">
         <div
           ref={playheadRef}
-          className="absolute left-0 w-0.5 bg-blue-500 z-50 pointer-events-none"
+          className="absolute left-0 w-0.5 bg-blue-500 z-40 pointer-events-none"
           style={{
             top: '0',
             bottom: '0',

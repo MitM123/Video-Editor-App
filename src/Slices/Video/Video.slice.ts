@@ -6,6 +6,7 @@ export interface VideoItem {
   duration: number;
   appliedFilter?: string;
   appliedEffect?: string;
+  processedUrl?: string;  // this holds the processed video blob URL
 }
 
 interface VideoState {
@@ -39,8 +40,14 @@ const videoSlice = createSlice({
         video.appliedEffect = action.payload.effect;
       }
     },
+    setProcessedVideo: (state, action: PayloadAction<{ url: string; processedUrl: string }>) => {
+      const video = state.uploadedVideos.find(v => v.url === action.payload.url);
+      if (video) {
+        video.processedUrl = action.payload.processedUrl;
+      }
+    },
   },
 });
 
-export const { addVideos, removeVideo, setVideoFilter, setVideoEffect } = videoSlice.actions;
+export const { addVideos, removeVideo, setVideoFilter, setVideoEffect, setProcessedVideo } = videoSlice.actions;
 export default videoSlice.reducer;

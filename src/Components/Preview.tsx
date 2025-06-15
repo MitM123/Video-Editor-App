@@ -17,7 +17,7 @@ const Preview = () => {
 
   const getVideoStyle = (video: any) => {
     const FILTER_STYLES: Record<string, string> = {
-      none: 'none',
+      none: 'none', 
       grayscale: 'grayscale(100%)',
       sepia: 'sepia(100%)',
       blur: 'blur(5px)',
@@ -34,7 +34,6 @@ const Preview = () => {
       bw: 'grayscale(100%) contrast(120%)'
     };
 
-    // Apply filter if exists, otherwise apply effect (only one at a time)
     const filterStyle = video.appliedFilter ? FILTER_STYLES[video.appliedFilter] || 'none' : 'none';
     const effectStyle = video.appliedEffect ? EFFECT_STYLES[video.appliedEffect] || 'none' : 'none';
 
