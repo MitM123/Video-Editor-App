@@ -1,6 +1,7 @@
 import { Plus, Minus, SquareSplitHorizontal, Trash } from 'lucide-react';
 import { FaPlay } from "react-icons/fa6";
 import { BsFillPauseFill } from "react-icons/bs";
+import { useEffect, useRef } from 'react';
 
 interface TimelineControlsProps {
     isPlaying: boolean;
@@ -20,7 +21,27 @@ const TimelineControls = ({
     onZoomIn,
     onZoomOut,
 }: TimelineControlsProps) => {
-    
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.code === 'Space' &&
+                document.activeElement?.tagName !== 'INPUT' &&
+                document.activeElement?.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                onPlayPause();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onPlayPause]);
+
+    const handleClick = () => {
+        onPlayPause();
+        buttonRef.current?.focus();
+    };
+
     const formatTime = (totalSeconds: number): string => {
 
         const hours = Math.floor(totalSeconds / 3600);
@@ -51,10 +72,16 @@ const TimelineControls = ({
                     {`${formatTime(currentTime)} / ${formatTime(totalDuration)}`}
                 </span>
                 <button
-                    onClick={onPlayPause}
-                    className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white border rounded-full hover:bg-gray-50 transition-colors border-gray-300"
+                    ref={buttonRef}
+                    onClick={handleClick}
+                    className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white border rounded-full hover:bg-gray-50 transition-colors border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    aria-label={isPlaying ? "Pause" : "Play"}
                 >
-                    {isPlaying ? <BsFillPauseFill className="w-6 h-6 text-gray-700" /> : <FaPlay className="w-4 h-4 text-gray-700 ml-0.5" />}
+                    {isPlaying ? (
+                        <BsFillPauseFill className="w-6 h-6 text-gray-700" />
+                    ) : (
+                        <FaPlay className="w-4 h-4 text-gray-700 ml-0.5" />
+                    )}
                 </button>
             </div>
 

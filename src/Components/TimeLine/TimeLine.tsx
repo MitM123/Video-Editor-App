@@ -183,9 +183,6 @@ const Timeline = () => {
     }
   };
 
-
-
-
   const handleMouseUp = () => setDraggedClip(null);
 
   return (

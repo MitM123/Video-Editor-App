@@ -1,9 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-interface VideoItem {
+export interface VideoItem {
   url: string;
   name: string;
   duration: number;
+  appliedFilter?: string;
+  appliedEffect?: string;
 }
 
 interface VideoState {
@@ -24,9 +26,21 @@ const videoSlice = createSlice({
     removeVideo: (state, action: PayloadAction<number>) => {
       URL.revokeObjectURL(state.uploadedVideos[action.payload].url);
       state.uploadedVideos.splice(action.payload, 1);
-    }
+    },
+    setVideoFilter: (state, action: PayloadAction<{ url: string; filter: string }>) => {
+      const video = state.uploadedVideos.find(v => v.url === action.payload.url);
+      if (video) {
+        video.appliedFilter = action.payload.filter === 'none' ? undefined : action.payload.filter;
+      }
+    },
+    setVideoEffect: (state, action: PayloadAction<{ url: string; effect?: string }>) => {
+      const video = state.uploadedVideos.find(v => v.url === action.payload.url);
+      if (video) {
+        video.appliedEffect = action.payload.effect;
+      }
+    },
   },
 });
 
-export const { addVideos, removeVideo } = videoSlice.actions;
+export const { addVideos, removeVideo, setVideoFilter, setVideoEffect } = videoSlice.actions;
 export default videoSlice.reducer;
