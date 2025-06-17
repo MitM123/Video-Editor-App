@@ -1,5 +1,8 @@
 import { Undo2, Redo2, Upload } from 'lucide-react';
 import logo from '../../assets/logo.jpg';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../../Slices/store';
+import { ActionCreators } from 'redux-undo';
 
 interface HeaderControlsProps {
     projectName: string;
@@ -8,6 +11,8 @@ interface HeaderControlsProps {
 }
 
 const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: HeaderControlsProps) => {
+    const dispatch = useDispatch();
+    const { past, future } = useSelector((state: RootState) => state.shapes);
     return (
         <div className="flex items-center font-dmsans justify-between px-8 py-2 bg-[#f1f3f4] flex-shrink-0 shadow-sm">
             <div className="flex items-center space-x-4">
@@ -30,12 +35,16 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
                     <button
                         className="p-1.5 cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
                         title="Undo"
+                        onClick={() => dispatch(ActionCreators.undo())}
+                        disabled={!past.length}
                     >
                         <Undo2 className="w-5 h-5 text-gray-600" />
                     </button>
                     <button
                         className="p-1.5 cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
                         title="Redo"
+                        onClick={() => dispatch(ActionCreators.redo())}
+                        disabled={!future.length}
                     >
                         <Redo2 className="w-5 h-5 text-gray-600" />
                     </button>

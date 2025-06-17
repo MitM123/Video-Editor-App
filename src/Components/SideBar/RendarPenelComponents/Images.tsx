@@ -13,21 +13,23 @@ const Images = () => {
     const dispatch = useDispatch();
 
     const imageData = [
-        { id: 1, bg: "bg-gradient-to-br from-blue-400 to-purple-600", image: third, name: "Image 1" },
-        { id: 2, bg: "bg-gradient-to-br from-gray-300 to-gray-500", image: fourth, name: "Image 2" },
-        { id: 4, bg: "bg-gradient-to-br from-blue-300 to-blue-500", image: second, name: "Image 3" },
-        { id: 5, bg: "bg-gradient-to-br from-gray-400 to-gray-600", image: seventh, name: "Image 4" },
-        { id: 6, bg: "bg-gradient-to-br from-yellow-300 to-red-400", image: eighth, name: "Image 5" },
-        { id: 7, bg: "bg-gradient-to-br from-green-400 to-green-600", image: sixth, name: "Image 6" },
-        { id: 8, bg: "bg-gradient-to-br from-orange-300 to-orange-500", image: fifth, name: "Image 7" },
+        { id: 1, bg: "bg-gradient-to-br from-blue-400 to-purple-600", image: third, name: "Nature" },
+        { id: 2, bg: "bg-gradient-to-br from-gray-300 to-gray-500", image: fourth, name: "Cityscape" },
+        { id: 4, bg: "bg-gradient-to-br from-blue-300 to-blue-500", image: second, name: "Beach" },
+        { id: 5, bg: "bg-gradient-to-br from-gray-400 to-gray-600", image: seventh, name: "Mountains" },
+        { id: 6, bg: "bg-gradient-to-br from-yellow-300 to-red-400", image: eighth, name: "Sunset" },
+        { id: 7, bg: "bg-gradient-to-br from-green-400 to-green-600", image: sixth, name: "Forest" },
+        { id: 8, bg: "bg-gradient-to-br from-orange-300 to-orange-500", image: fifth, name: "Desert" },
     ];
 
     const handleImageClick = (image: typeof imageData[0]) => {
         dispatch(addImage({
-            id: image.id,
+            id: Date.now(),
             url: image.image,
             name: image.name,
-            position: { x: 0, y: 0 }
+            position: { x: 100, y: 100 },
+            size: { width: 200, height: 200 },
+            appliedFilter: 'none',
         }));
     };
 
@@ -37,9 +39,11 @@ const Images = () => {
                 {imageData.map((image) => (
                     <motion.div
                         key={image.id}
-                        className={`${image.bg} col-span-1 row-span-1 rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200 shadow-sm hover:shadow-md relative`}
+                        className={`${image.bg} aspect-square rounded-lg cursor-pointer overflow-hidden shadow-sm hover:shadow-md relative`}
                         onClick={() => handleImageClick(image)}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ duration: 0.2 }}
                     >
                         <div className="w-full h-full flex items-center justify-center text-white font-semibold opacity-70">
                             <img
@@ -51,8 +55,11 @@ const Images = () => {
                     </motion.div>
                 ))}
             </div>
-        </div>
+
+        </div >
     );
 };
+
+
 
 export default Images;

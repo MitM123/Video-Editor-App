@@ -1,14 +1,18 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
-import { imageRefs } from '../Preview';
+import { Rnd } from 'react-rnd';
 import type { RootState } from '../../Slices/store';
-import { deleteImage } from '../../Slices/Image/Image.slice';
+import {
+  deleteImage,
+  updateImagePosition,
+  updateImageSize,
+  bringImageToFront
+} from '../../Slices/Image/Image.slice';
 
 const PreviewImages = () => {
   const dispatch = useDispatch();
   const uploadedImages = useSelector((state: RootState) => state.image.uploadedImages);
 
-   const getMediaStyle = (media: any) => {
+  const getMediaStyle = (media: any) => {
     const FILTER_STYLES: Record<string, string> = {
       none: 'none',
       grayscale: 'grayscale(100%)',
@@ -33,43 +37,69 @@ const PreviewImages = () => {
     return filterStyle !== 'none' ? filterStyle : effectStyle;
   };
 
-  const handleDeleteImage = (id: number) => {
+  const handleDeleteImage = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
     dispatch(deleteImage(id));
+  };
+
+  const handleDragStop = (d: any, id: number) => {
+    dispatch(updateImagePosition({ id, position: { x: d.x, y: d.y } }));
+    dispatch(bringImageToFront(id));
+  };
+
+  const handleResizeStop = (
+    ref: any,
+    position: any,
+    id: number
+  ) => {
+    dispatch(updateImageSize({
+      id,
+      size: {
+        width: ref.offsetWidth,
+        height: ref.offsetHeight
+      }
+    }));
+    dispatch(updateImagePosition({ id, position }));
+    dispatch(bringImageToFront(id));
   };
 
   if (uploadedImages.length === 0) return null;
 
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {uploadedImages.map((image, index) => (
-        <motion.div
+    <div className="absolute inset-0">
+      {uploadedImages.map((image) => (
+        <Rnd
           key={`image-${image.id}`}
-          className="relative group"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          whileHover={{ scale: 1.02 }}
+          size={{ width: image.size.width, height: image.size.height }}
+          position={{ x: image.position.x, y: image.position.y }}
+          onDragStop={(d) => handleDragStop(d, image.id)}
+          onResizeStop={(ref, position) =>
+            handleResizeStop(ref, position, image.id)
+          }
+          style={{
+            zIndex: image.zIndex,
+            filter: getMediaStyle(image)
+          }}
+          bounds="parent"
+          lockAspectRatio={true}
+          resizeHandleClasses={{
+            bottomRight: 'resize-handle'
+          }}
         >
-          <img
-            ref={el => {
-              if (imageRefs[index]) {
-                imageRefs[index].current = el;
-              }
-            }}
-            src={image.url}
-            alt={image.name}
-            className="w-full h-auto max-h-[300px] object-contain rounded-lg shadow-lg"
-            style={{
-              filter: getMediaStyle(image)
-            }}
-          />
-          <button
-            onClick={() => handleDeleteImage(image.id)}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
-          >
-            ×
-          </button>
-        </motion.div>
+          <div className="relative w-full h-full group">
+            <img
+              src={image.url}
+              alt={image.name}
+              className="w-full h-full object-contain"
+            />
+            <button
+              onClick={(e) => handleDeleteImage(e, image.id)}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+            >
+              ×
+            </button>
+          </div>
+        </Rnd>
       ))}
     </div>
   );

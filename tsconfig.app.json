@@ -23,5 +23,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "types/ffmpeg__ffmpeg.d.ts"]
+  "include": ["src", "types/ffmpeg__ffmpeg.d.ts", "ffmpeg.d.ts"]
 }

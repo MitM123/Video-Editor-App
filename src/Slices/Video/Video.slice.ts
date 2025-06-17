@@ -1,6 +1,8 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export interface VideoItem {
+  size: any;
+  position: any;
   url: string;
   name: string;
   duration: number;

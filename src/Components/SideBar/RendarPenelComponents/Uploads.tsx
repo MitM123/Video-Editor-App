@@ -28,7 +28,9 @@ const VideoUploads = () => {
                     return {
                         url: URL.createObjectURL(file),
                         name: file.name,
-                        duration
+                        duration,
+                        size: file.size,
+                        position: 0
                     };
                 })
             );

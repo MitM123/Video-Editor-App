@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect  } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../Slices/store';
 import PreviewMedia from '../Components/Preview/PreviewMedia';
@@ -32,7 +32,9 @@ const Preview = () => {
       {!hasMedia ? (
         <p className="text-gray-600 text-lg">No media uploaded yet.</p>
       ) : (
-        <PreviewMedia />
+        <>
+          <PreviewMedia />
+        </>
       )}
     </div>
   );

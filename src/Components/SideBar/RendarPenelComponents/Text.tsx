@@ -31,7 +31,8 @@ const Text = () => {
                 type === 'subheading' ? 'Subheading' : 'Body text',
             type,
             position: { x: 100, y: 100 },
-            style: defaultStyles[type]
+            style: defaultStyles[type],
+            isEditing: false
         };
 
         dispatch(addText(newText));

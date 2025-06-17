@@ -1,25 +1,16 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
+import { Rnd } from 'react-rnd';
 import type { RootState } from '../../Slices/store';
-import { updateShapePosition, deleteShape } from '../../Slices/Shapes/Shape.slice';
+import {
+    updateShapePosition,
+    updateShapeSize,
+    deleteShape,
+    bringShapeToFront
+} from '../../Slices/Shapes/Shape.slice';
 
 const PreviewShapes = () => {
     const dispatch = useDispatch();
-    const shapes = useSelector((state: RootState) => state.shapes.shapes);
-
-    const handleDragEnd = (id: string, info: any) => {
-        dispatch(updateShapePosition({
-            id,
-            position: {
-                x: info.point.x,
-                y: info.point.y
-            }
-        }));
-    };
-
-    const handleDelete = (id: string) => {
-        dispatch(deleteShape(id));
-    };
+    const shapes = useSelector((state: RootState) => state.shapes.present.shapes);
 
     const shapeComponents = {
         blob: (
@@ -44,38 +35,68 @@ const PreviewShapes = () => {
         )
     };
 
+    const handleDragStop = (e: any, d: any, id: string) => {
+        dispatch(updateShapePosition({
+            id,
+            position: { x: d.x, y: d.y }
+        }));
+        dispatch(bringShapeToFront(id));
+    };
+
+    const handleResizeStop = (
+        ref: any,
+        position: any,
+        id: string
+    ) => {
+        dispatch(updateShapeSize({
+            id,
+            size: {
+                width: ref.offsetWidth,
+                height: ref.offsetHeight
+            }
+        }));
+        dispatch(updateShapePosition({ id, position }));
+        dispatch(bringShapeToFront(id));
+    };
+
+    const handleDelete = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        dispatch(deleteShape(id));
+    };
+
     if (shapes.length === 0) return null;
 
     return (
-        <div className="absolute w-full h-full pointer-events-none">
+        <div className="absolute inset-0">
             {shapes.map((shape: any) => (
-                <motion.div
+                <Rnd
                     key={`shape-${shape.id}`}
-                    className="absolute cursor-move pointer-events-auto"
+                    size={{ width: shape.size.width, height: shape.size.height }}
+                    position={{ x: shape.position.x, y: shape.position.y }}
+                    onDragStop={(e, d) => handleDragStop(e, d, shape.id)}
+                    onResizeStop={(ref, position) =>
+                        handleResizeStop(ref, position, shape.id)
+                    }
                     style={{
-                        left: `${shape.position.x}px`,
-                        top: `${shape.position.y}px`,
-                        width: `${shape.size}px`,
-                        height: `${shape.size}px`,
-                        zIndex: 15,
+                        zIndex: shape.zIndex,
                         color: shape.color
                     }}
-                    drag
-                    dragConstraints={{ left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight }}
-                    onDragEnd={(_, info) => handleDragEnd(shape.id, info)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    bounds="parent"
+                    lockAspectRatio
+                    resizeHandleClasses={{
+                        bottomRight: 'resize-handle'
+                    }}
                 >
-                    <div className="relative group w-full h-full">
-                        {shapeComponents[shape.type as keyof typeof shapeComponents]} {/* Added type assertion */}
+                    <div className="relative w-full h-full group">
+                        {shapeComponents[shape.type as keyof typeof shapeComponents]}
                         <button
-                            onClick={() => handleDelete(shape.id)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 text-xs pointer-events-auto"
+                            onClick={(e) => handleDelete(e, shape.id)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                         >
                             ×
                         </button>
                     </div>
-                </motion.div>
+                </Rnd>
             ))}
         </div>
     );
