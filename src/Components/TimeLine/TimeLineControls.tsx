@@ -8,13 +8,23 @@ interface TimelineControlsProps {
     currentTime: number;
     totalDuration: number;
     timelineScale: number;
+    playbackSpeed: number;
     onPlayPause: () => void;
     onZoomIn: () => void;
     onZoomOut: () => void;
     onPlaybackSpeedChange: (speed: number) => void;
 }
 
-const TimelineControls = ({ isPlaying, currentTime, totalDuration, onPlayPause, onZoomIn, onZoomOut, onPlaybackSpeedChange }: TimelineControlsProps) => {
+const TimelineControls = ({ 
+    isPlaying, 
+    currentTime, 
+    totalDuration, 
+    onPlayPause, 
+    onZoomIn, 
+    onZoomOut, 
+    playbackSpeed,
+    onPlaybackSpeedChange 
+}: TimelineControlsProps) => {
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
@@ -91,7 +101,7 @@ const TimelineControls = ({ isPlaying, currentTime, totalDuration, onPlayPause, 
                 <select
                     onChange={(e) => onPlaybackSpeedChange(parseFloat(e.target.value))}
                     className="text-xs border rounded px-2 py-1 focus:outline-none"
-                    defaultValue="1"
+                    value={playbackSpeed.toString()}
                 >
                     <option value="0.5">0.5x</option>
                     <option value="0.75">0.75x</option>

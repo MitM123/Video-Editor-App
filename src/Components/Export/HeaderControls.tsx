@@ -3,7 +3,7 @@ import logo from '../../assets/logo.jpg';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../Slices/store';
 import { ActionCreators } from 'redux-undo';
-import { addWatermark } from '../../Helper/ffmpegUtils';
+import { addWatermark, adjustVideoSpeed } from '../../Helper/ffmpegUtils';
 import { addImageOverlay } from '../../Helper/ffmpegUtils';
 import { useState } from 'react';
 import { setProcessedVideo } from '../../Slices/Video/Video.slice';
@@ -21,6 +21,7 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
     const texts = useSelector((state: RootState) => state.text.texts);
     const images = useSelector((state: RootState) => state.image.uploadedImages);
     const [processing, setProcessing] = useState(false);
+    const playbackSpeed = useSelector((state: RootState) => state.video.playbackSpeed) || 1;
 
     const processVideo = async () => {
         if (!uploadedVideos.length) {
@@ -30,64 +31,124 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
 
         try {
             setProcessing(true);
+            console.log('Starting video processing...');
             const currentVideo = uploadedVideos[0];
+            
+            // Validate video URL
+            if (!currentVideo.url) {
+                throw new Error('Invalid video URL');
+            }
+
             let processedVideoUrl = currentVideo.url;
             let result;
 
-            if (texts.length > 0) {
-                for (const text of texts) {
-                    result = await addWatermark(processedVideoUrl, {
-                        text: text.content,
-                        position: {
-                            x: text.position.x.toString(),
-                            y: text.position.y.toString()
-                        },
-                        style: {
-                            fontSize: text.style.fontSize,
-                            fontColor: text.style.color,
-                            opacity: 1
-                        }
-                    });
-
-                    if (result) {
-                        const blob = new Blob([result.buffer], { type: 'video/mp4' });
-                        if (processedVideoUrl !== currentVideo.url) {
-                            URL.revokeObjectURL(processedVideoUrl);
-                        }
-                        processedVideoUrl = URL.createObjectURL(blob);
+            if (playbackSpeed !== 1) {
+                try {
+                    console.log('Adjusting video speed...');
+                    result = await adjustVideoSpeed(processedVideoUrl, playbackSpeed);
+                    if (!result) {
+                        throw new Error('Failed to adjust video speed - no result returned');
                     }
+                    const blob = new Blob([result], { type: 'video/mp4' });
+                    if (processedVideoUrl !== currentVideo.url) {
+                        URL.revokeObjectURL(processedVideoUrl);
+                    }
+                    processedVideoUrl = URL.createObjectURL(blob);
+                    console.log('Speed adjustment completed successfully');
+                } catch (error: any) {
+                    console.error('Error adjusting video speed:', error);
+                    setProcessing(false);
+                    throw error;
                 }
             }
 
+            // Process images first if present
             if (images.length > 0) {
-                for (const image of images) {
-                    result = await addImageOverlay(processedVideoUrl, image.url, {
-                        x: image.position.x,
-                        y: image.position.y
-                    });
+                try {
+                    console.log(`Processing ${images.length} images...`);
+                    for (const image of images) {
+                        if (!image.url) {
+                            console.warn('Skipping image with invalid URL');
+                            continue;
+                        }
+                        console.log('Processing image overlay...');
+                        result = await addImageOverlay(processedVideoUrl, image.url, {
+                            x: image.position.x,
+                            y: image.position.y
+                        });
 
-                    if (result) {
-                        const blob = new Blob([result.buffer], { type: 'video/mp4' });
+                        if (!result) {
+                            throw new Error('Failed to process image overlay - no result returned');
+                        }
+                        const blob = new Blob([result], { type: 'video/mp4' });
                         if (processedVideoUrl !== currentVideo.url) {
                             URL.revokeObjectURL(processedVideoUrl);
                         }
                         processedVideoUrl = URL.createObjectURL(blob);
+                        console.log('Image overlay completed successfully');
                     }
+                } catch (error) {
+                    console.error('Error processing image overlay:', error);
+                    setProcessing(false);
+                    throw error;
                 }
             }
 
-            if (result) {
+            // Process texts if present
+            if (texts.length > 0) {
+                try {
+                    console.log(`Processing ${texts.length} text overlays...`);
+                    for (const text of texts) {
+                        console.log('Processing text overlay...');
+                        result = await addWatermark(processedVideoUrl, {
+                            text: text.content,
+                            position: {
+                                x: text.position.x.toString(),
+                                y: text.position.y.toString()
+                            },
+                            style: {
+                                fontSize: text.style.fontSize,
+                                fontColor: text.style.color,
+                                opacity: 1
+                            }
+                        });
+
+                        if (!result) {
+                            throw new Error('Failed to process text overlay - no result returned');
+                        }
+                        const blob = new Blob([result], { type: 'video/mp4' });
+                        if (processedVideoUrl !== currentVideo.url) {
+                            URL.revokeObjectURL(processedVideoUrl);
+                        }
+                        processedVideoUrl = URL.createObjectURL(blob);
+                        console.log('Text overlay completed successfully');
+                    }
+                } catch (error) {
+                    console.error('Error processing text overlay:', error);
+                    setProcessing(false);
+                    throw error;
+                }
+            }
+
+            if (result || (playbackSpeed !== 1 && processedVideoUrl !== currentVideo.url)) {
+                console.log('Finalizing video processing...');
+                const finalResult = result || await adjustVideoSpeed(processedVideoUrl, playbackSpeed);
+                if (!finalResult) {
+                    throw new Error('Failed to get final video result');
+                }
                 dispatch(setProcessedVideo({
                     url: currentVideo.url,
                     processedUrl: processedVideoUrl,
-                    processedData: result
+                    processedData: finalResult
                 }));
-                return result;
+                console.log('Video processing completed successfully');
+                return finalResult;
             }
 
             return null;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error processing video:', error);
+            setProcessing(false);
             throw error;
         } finally {
             setProcessing(false);
@@ -107,14 +168,12 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
             if (processedResult) {
                 const blob = new Blob([processedResult.buffer], { type: 'video/mp4' });
                 const url = URL.createObjectURL(blob);
-
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `${projectName || 'edited'}-video.mp4`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-
                 URL.revokeObjectURL(url);
             } else if (currentVideo.processedUrl) {
                 const a = document.createElement('a');

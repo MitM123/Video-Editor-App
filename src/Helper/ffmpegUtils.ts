@@ -60,25 +60,47 @@ export async function addWatermark(inputUrl: string, config: WatermarkConfig) {
   return new Uint8Array(fileData as ArrayBuffer);
 }
 
-export async function applyGrayscale(inputUrl: string) {
+
+export async function adjustVideoSpeed(inputUrl: string, speed: number): Promise<Uint8Array> {
   const ffmpeg = await getFFmpegInstance();
-  await ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl));
-  await ffmpeg.exec([
-    "-i", "input.mp4",
-    "-vf", "hue=s=0",
-    "-c:v", "libx264",
-    "-preset", "ultrafast",
-    "-crf", "23",
-    "-threads", "0",
-    "-c:a", "copy",
-    "-avoid_negative_ts", "make_zero",
-    "-movflags", "+faststart",
-    "-f", "mp4",
-    "output.mp4",
-  ]);
-  const fileData = await ffmpeg.readFile("output.mp4");
-  return new Uint8Array(fileData as ArrayBuffer);
+
+  try {
+    try {
+      await ffmpeg.deleteFile("input.mp4");
+      await ffmpeg.deleteFile("output.mp4");
+    } catch (e) {
+    }
+
+    const inputData = await fetchFile(inputUrl);
+    if (!inputData) throw new Error('Failed to fetch input file');
+    await ffmpeg.writeFile("input.mp4", inputData);
+
+    const pts = 1 / speed;
+    await ffmpeg.exec([
+      "-i", "input.mp4",
+      "-filter:v", `setpts=${pts}*PTS`,
+      "-c:v", "libx264",
+      "-preset", "ultrafast",
+      "-c:a", "copy",
+      "-f", "mp4",
+      "output.mp4"
+    ]);
+
+    const fileData = await ffmpeg.readFile("output.mp4");
+    if (!fileData) throw new Error('Failed to read output file');
+
+    return new Uint8Array(fileData as ArrayBuffer);
+  } catch (error: any) {
+    throw new Error(`Failed to adjust video speed: ${error?.message || 'Unknown error'}`);
+  } finally {
+    try {
+      await ffmpeg.deleteFile("input.mp4");
+      await ffmpeg.deleteFile("output.mp4");
+    } catch (e) {
+    }
+  }
 }
+
 
 export async function applyBrightness(inputUrl: string, brightness: number = 0.2) {
   const ffmpeg = await getFFmpegInstance();
@@ -121,24 +143,33 @@ export async function trimVideo(inputUrl: string, startTime: number, duration: n
   return new Uint8Array(fileData as ArrayBuffer);
 }
 
-export async function addImageOverlay(inputUrl: string, imageUrl: string, position: { x: number, y: number }) {
+export async function addImageOverlay(
+  inputUrl: string,
+  imageUrl: string,
+  position: { x: number, y: number }
+): Promise<Uint8Array> {
   const ffmpeg = await getFFmpegInstance();
-  await ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl));
-  await ffmpeg.writeFile("overlay.png", await fetchFile(imageUrl));
+
+  // Write input files
+  await Promise.all([
+    ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl)),
+    ffmpeg.writeFile("overlay.png", await fetchFile(imageUrl))
+  ]);
+
+  // Execute FFmpeg command
   await ffmpeg.exec([
     "-i", "input.mp4",
     "-i", "overlay.png",
-    "-filter_complex", `[1:v][0:v]overlay=${position.x}:${position.y}`,
+    "-filter_complex", `[1:v]format=rgba[over];[0:v][over]overlay=${position.x}:${position.y}:format=auto`,
     "-c:v", "libx264",
-    "-preset", "ultrafast",
+    "-preset", "fast",
     "-crf", "23",
-    "-threads", "0",
     "-c:a", "copy",
-    "-avoid_negative_ts", "make_zero",
     "-movflags", "+faststart",
     "-f", "mp4",
-    "output.mp4",
+    "output.mp4"
   ]);
+
   const fileData = await ffmpeg.readFile("output.mp4");
   return new Uint8Array(fileData as ArrayBuffer);
 }
@@ -202,7 +233,6 @@ export async function processVideoExport(config: VideoEditConfig): Promise<Uint8
     lastOutput = `[v${inputIndex}]`;
   }
 
-  // Add multiple text overlays if specified
   if (config.texts && config.texts.length > 0) {
     await ffmpeg.writeFile('arial.ttf', await fetchFile('https://raw.githubusercontent.com/ffmpegwasm/testdata/master/arial.ttf'));
     config.texts.forEach((text, i) => {
@@ -250,3 +280,4 @@ export async function processVideoExport(config: VideoEditConfig): Promise<Uint8
   const fileData = await ffmpeg.readFile("output.mp4");
   return new Uint8Array(fileData as ArrayBuffer);
 }
+

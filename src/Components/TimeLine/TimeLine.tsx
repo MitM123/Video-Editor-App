@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../Slices/store';
 import TimelineControls from './TimeLineControls';
 import TimelineHeader from './TimeLineHeader';
 import Track from './Track';
 import { videoRefs } from '../Preview';
 import type { TrackType } from '../../Components/types';
+import { setPlaybackSpeed } from '../../Slices/Video/Video.slice';
 
 const Timeline = () => {
+  const dispatch = useDispatch();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [timelineScale, setTimelineScale] = useState(1);
   const [draggedClip, setDraggedClip] = useState<{ clipId: string; offset: number } | null>(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const playbackSpeed = useSelector((state: RootState) => state.video.playbackSpeed);
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>(0);
@@ -134,6 +136,10 @@ const Timeline = () => {
     });
   }, [playbackSpeed]);
 
+  const handlePlaybackSpeedChange = (speed: number) => {
+    dispatch(setPlaybackSpeed(speed));
+  };
+
   return (
     <div className="w-full h-full bg-white font-dmsans flex flex-col overflow-y-auto">
       <TimelineControls
@@ -144,7 +150,8 @@ const Timeline = () => {
         onPlayPause={togglePlayback}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
-        onPlaybackSpeedChange={setPlaybackSpeed}
+        playbackSpeed={playbackSpeed}
+        onPlaybackSpeedChange={handlePlaybackSpeedChange}
       />
 
       <div className="flex flex-col overflow-hidden relative">

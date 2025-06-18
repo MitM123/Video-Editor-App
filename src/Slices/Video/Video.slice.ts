@@ -14,10 +14,12 @@ export interface VideoItem {
 
 interface VideoState {
   uploadedVideos: VideoItem[];
+  playbackSpeed: number;
 }
 
 const initialState: VideoState = {
   uploadedVideos: [],
+  playbackSpeed: 1,
 };
 
 const videoSlice = createSlice({
@@ -56,8 +58,11 @@ const videoSlice = createSlice({
         video.processedData = action.payload.processedData;
       }
     },
+    setPlaybackSpeed: (state, action: PayloadAction<number>) => {
+      state.playbackSpeed = action.payload;
+    },
   },
 });
 
-export const { addVideos, removeVideo, setVideoFilter, setVideoEffect, setProcessedVideo } = videoSlice.actions;
+export const { addVideos, removeVideo, setVideoFilter, setVideoEffect, setProcessedVideo, setPlaybackSpeed } = videoSlice.actions;
 export default videoSlice.reducer;
