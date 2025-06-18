@@ -30,6 +30,7 @@ const Images = () => {
             position: { x: 100, y: 100 },
             size: { width: 200, height: 200 },
             appliedFilter: 'none',
+            zIndex: 1,
         }));
     };
 
