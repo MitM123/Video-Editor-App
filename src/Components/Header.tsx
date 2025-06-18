@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 const Header = () => {
     const [projectName, setProjectName] = useState('New Project');
     const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
+    const splitPoints = useSelector((state: RootState) => state.video.splitPoints);
 
     const handleExportClick = () => {
         if (uploadedVideos.length === 0) {
@@ -21,6 +22,7 @@ const Header = () => {
                 projectName={projectName}
                 onProjectNameChange={setProjectName}
                 onExportClick={handleExportClick}
+                splitPoints={splitPoints}
             />
         </>
     );

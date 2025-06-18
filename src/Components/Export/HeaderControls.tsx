@@ -3,7 +3,7 @@ import logo from '../../assets/logo.jpg';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../Slices/store';
 import { ActionCreators } from 'redux-undo';
-import { addWatermark, adjustVideoSpeed } from '../../Helper/ffmpegUtils';
+import { addWatermark, adjustVideoSpeed, applyVideoEffect, trimVideo } from '../../Helper/ffmpegUtils';
 import { addImageOverlay } from '../../Helper/ffmpegUtils';
 import { useState } from 'react';
 import { setProcessedVideo } from '../../Slices/Video/Video.slice';
@@ -12,9 +12,10 @@ interface HeaderControlsProps {
     projectName: string;
     onProjectNameChange: (name: string) => void;
     onExportClick: () => void;
+    splitPoints?: { startTime: number; endTime: number; }[];
 }
 
-const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: HeaderControlsProps) => {
+const HeaderControls = ({ projectName, onProjectNameChange, onExportClick, splitPoints = [] }: HeaderControlsProps) => {
     const dispatch = useDispatch();
     const { past, future } = useSelector((state: RootState) => state.shapes);
     const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
@@ -34,7 +35,6 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
             console.log('Starting video processing...');
             const currentVideo = uploadedVideos[0];
             
-            // Validate video URL
             if (!currentVideo.url) {
                 throw new Error('Invalid video URL');
             }
@@ -42,27 +42,76 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
             let processedVideoUrl = currentVideo.url;
             let result;
 
-            if (playbackSpeed !== 1) {
+            if (splitPoints.length > 0) {
                 try {
-                    console.log('Adjusting video speed...');
-                    result = await adjustVideoSpeed(processedVideoUrl, playbackSpeed);
+                    console.log('Processing split points...');
+                    const splitPoint = splitPoints[splitPoints.length - 1]; // Use the last split point
+                    const duration = splitPoint.endTime - splitPoint.startTime;
+                    
+                    console.log(`Trimming video from ${splitPoint.startTime} to ${splitPoint.endTime}`);
+                    result = await trimVideo(processedVideoUrl, splitPoint.startTime, duration);
+                    
                     if (!result) {
-                        throw new Error('Failed to adjust video speed - no result returned');
+                        throw new Error('Failed to trim video - no result returned');
                     }
                     const blob = new Blob([result], { type: 'video/mp4' });
                     if (processedVideoUrl !== currentVideo.url) {
                         URL.revokeObjectURL(processedVideoUrl);
                     }
                     processedVideoUrl = URL.createObjectURL(blob);
-                    console.log('Speed adjustment completed successfully');
-                } catch (error: any) {
-                    console.error('Error adjusting video speed:', error);
+                    console.log('Video trimming completed successfully');
+                } catch (error) {
+                    console.error('Error trimming video:', error);
+                    alert('Failed to trim video. Please try again.');
                     setProcessing(false);
-                    throw error;
+                    return null;
                 }
             }
 
-            // Process images first if present
+            if (currentVideo.appliedEffect) {
+                try {
+                    console.log('Applying video effect:', currentVideo.appliedEffect);
+                    result = await applyVideoEffect(processedVideoUrl, currentVideo.appliedEffect);
+                    if (!result) {
+                        throw new Error('Failed to apply video effect - no result returned');
+                    }
+                    const blob = new Blob([result], { type: 'video/mp4' });
+                    if (processedVideoUrl !== currentVideo.url) {
+                        URL.revokeObjectURL(processedVideoUrl);
+                    }
+                    processedVideoUrl = URL.createObjectURL(blob);
+                    result = new Uint8Array(await blob.arrayBuffer());
+                    console.log('Effect applied successfully');
+                } catch (error) {
+                    console.error('Error applying video effect:', error);
+                    alert('Failed to apply video effect. Please try again.');
+                    setProcessing(false);
+                    return null;
+                }
+            }
+
+            if (playbackSpeed !== 1) {
+                try {
+                    console.log('Adjusting video speed...');
+                    const speedResult = await adjustVideoSpeed(processedVideoUrl, playbackSpeed);
+                    if (!speedResult) {
+                        throw new Error('Failed to adjust video speed - no result returned');
+                    }
+                    const blob = new Blob([speedResult], { type: 'video/mp4' });
+                    if (processedVideoUrl !== currentVideo.url) {
+                        URL.revokeObjectURL(processedVideoUrl);
+                    }
+                    processedVideoUrl = URL.createObjectURL(blob);
+                    result = speedResult;
+                    console.log('Speed adjustment completed successfully');
+                } catch (error) {
+                    console.error('Error adjusting video speed:', error);
+                    alert('Failed to adjust video speed. Please try again.');
+                    setProcessing(false);
+                    return null;
+                }
+            }
+
             if (images.length > 0) {
                 try {
                     console.log(`Processing ${images.length} images...`);
@@ -72,35 +121,36 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
                             continue;
                         }
                         console.log('Processing image overlay...');
-                        result = await addImageOverlay(processedVideoUrl, image.url, {
+                        const imageResult = await addImageOverlay(processedVideoUrl, image.url, {
                             x: image.position.x,
                             y: image.position.y
                         });
 
-                        if (!result) {
+                        if (!imageResult) {
                             throw new Error('Failed to process image overlay - no result returned');
                         }
-                        const blob = new Blob([result], { type: 'video/mp4' });
+                        const blob = new Blob([imageResult], { type: 'video/mp4' });
                         if (processedVideoUrl !== currentVideo.url) {
                             URL.revokeObjectURL(processedVideoUrl);
                         }
                         processedVideoUrl = URL.createObjectURL(blob);
+                        result = imageResult;
                         console.log('Image overlay completed successfully');
                     }
                 } catch (error) {
                     console.error('Error processing image overlay:', error);
+                    alert('Failed to add image overlay. Please try again.');
                     setProcessing(false);
-                    throw error;
+                    return null;
                 }
             }
 
-            // Process texts if present
             if (texts.length > 0) {
                 try {
                     console.log(`Processing ${texts.length} text overlays...`);
                     for (const text of texts) {
                         console.log('Processing text overlay...');
-                        result = await addWatermark(processedVideoUrl, {
+                        const textResult = await addWatermark(processedVideoUrl, {
                             text: text.content,
                             position: {
                                 x: text.position.x.toString(),
@@ -113,43 +163,42 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick }: Hea
                             }
                         });
 
-                        if (!result) {
+                        if (!textResult) {
                             throw new Error('Failed to process text overlay - no result returned');
                         }
-                        const blob = new Blob([result], { type: 'video/mp4' });
+                        const blob = new Blob([textResult], { type: 'video/mp4' });
                         if (processedVideoUrl !== currentVideo.url) {
                             URL.revokeObjectURL(processedVideoUrl);
                         }
                         processedVideoUrl = URL.createObjectURL(blob);
+                        result = textResult;
                         console.log('Text overlay completed successfully');
                     }
                 } catch (error) {
                     console.error('Error processing text overlay:', error);
+                    alert('Failed to add text overlay. Please try again.');
                     setProcessing(false);
-                    throw error;
+                    return null;
                 }
             }
 
-            if (result || (playbackSpeed !== 1 && processedVideoUrl !== currentVideo.url)) {
+            if (result) {
                 console.log('Finalizing video processing...');
-                const finalResult = result || await adjustVideoSpeed(processedVideoUrl, playbackSpeed);
-                if (!finalResult) {
-                    throw new Error('Failed to get final video result');
-                }
                 dispatch(setProcessedVideo({
                     url: currentVideo.url,
                     processedUrl: processedVideoUrl,
-                    processedData: finalResult
+                    processedData: result
                 }));
                 console.log('Video processing completed successfully');
-                return finalResult;
+                return result;
             }
 
             return null;
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error processing video:', error);
+            alert('Failed to process video. Please try again.');
             setProcessing(false);
-            throw error;
+            return null;
         } finally {
             setProcessing(false);
         }

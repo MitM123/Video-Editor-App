@@ -13,6 +13,7 @@ interface TimelineControlsProps {
     onZoomIn: () => void;
     onZoomOut: () => void;
     onPlaybackSpeedChange: (speed: number) => void;
+    onSplitClick: () => void;
 }
 
 const TimelineControls = ({ 
@@ -23,7 +24,8 @@ const TimelineControls = ({
     onZoomIn, 
     onZoomOut, 
     playbackSpeed,
-    onPlaybackSpeedChange 
+    onPlaybackSpeedChange,
+    onSplitClick
 }: TimelineControlsProps) => {
     const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -61,7 +63,10 @@ const TimelineControls = ({
     return (
         <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
             <div className="flex items-center space-x-4">
-                <div className="flex items-center cursor-pointer space-x-1">
+                <div 
+                    className="flex items-center hover:bg-gray-200 rounded-md p-2 cursor-pointer space-x-1"
+                    onClick={onSplitClick}
+                >
                     <SquareSplitHorizontal className="w-4 h-4 text-gray-500" />
                     <span className="text-xs font-semibold text-gray-600">Split Clip</span>
                 </div>

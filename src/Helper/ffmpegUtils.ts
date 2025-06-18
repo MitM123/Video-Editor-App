@@ -102,27 +102,8 @@ export async function adjustVideoSpeed(inputUrl: string, speed: number): Promise
 }
 
 
-export async function applyBrightness(inputUrl: string, brightness: number = 0.2) {
-  const ffmpeg = await getFFmpegInstance();
-  await ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl));
-  await ffmpeg.exec([
-    "-i", "input.mp4",
-    "-vf", `eq=brightness=${brightness}`,
-    "-c:v", "libx264",
-    "-preset", "ultrafast",
-    "-crf", "23",
-    "-threads", "0",
-    "-c:a", "copy",
-    "-avoid_negative_ts", "make_zero",
-    "-movflags", "+faststart",
-    "-f", "mp4",
-    "output.mp4",
-  ]);
-  const fileData = await ffmpeg.readFile("output.mp4");
-  return new Uint8Array(fileData as ArrayBuffer);
-}
-
 export async function trimVideo(inputUrl: string, startTime: number, duration: number) {
+  console.log('trimVideo', inputUrl, startTime, duration);
   const ffmpeg = await getFFmpegInstance();
   await ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl));
   await ffmpeg.exec([
@@ -279,5 +260,72 @@ export async function processVideoExport(config: VideoEditConfig): Promise<Uint8
   await ffmpeg.exec(ffmpegArgs);
   const fileData = await ffmpeg.readFile("output.mp4");
   return new Uint8Array(fileData as ArrayBuffer);
+}
+
+export async function applyVideoEffect(inputUrl: string, effect: string): Promise<Uint8Array> {
+  const ffmpeg = await getFFmpegInstance();
+
+  try {
+    try {
+      await ffmpeg.deleteFile("input.mp4");
+      await ffmpeg.deleteFile("output.mp4");
+    } catch (e) {
+    }
+
+    await ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl));
+
+    let filterCommand = "";
+    switch (effect.toLowerCase()) {
+      case "grayscale":
+        filterCommand = "colorchannelmixer=.3:.4:.3:0:.3:.4:.3:0:.3:.4:.3";
+        break;
+      case "sepia":
+        filterCommand = "colorize=hue=30:saturation=50:lightness=0";
+        break;
+      case "blur":
+        filterCommand = "gblur=sigma=2";
+        break;
+      case "sharpen":
+        filterCommand = "unsharp=5:5:1:5:5:0";
+        break;
+      case "brightness":
+        filterCommand = "eq=brightness=0.2";
+        break;
+      case "contrast":
+        filterCommand = "eq=contrast=1.5";
+        break;
+      case "saturation":
+        filterCommand = "eq=saturation=2";
+        break;
+      default:
+        throw new Error(`Unsupported effect: ${effect}`);
+    }
+
+    await ffmpeg.exec([
+      "-i", "input.mp4",
+      "-vf", filterCommand,
+      "-c:v", "libx264",
+      "-preset", "ultrafast",
+      "-crf", "23",
+      "-c:a", "copy",
+      "-movflags", "+faststart",
+      "-f", "mp4",
+      "output.mp4"
+    ]);
+
+    const fileData = await ffmpeg.readFile("output.mp4");
+    if (!fileData) throw new Error('Failed to read output file');
+
+    return new Uint8Array(fileData as ArrayBuffer);
+  } catch (error: any) {
+    console.error('Error applying video effect:', error);
+    throw new Error(`Failed to apply video effect: ${error?.message || 'Unknown error'}`);
+  } finally {
+    try {
+      await ffmpeg.deleteFile("input.mp4");
+      await ffmpeg.deleteFile("output.mp4");
+    } catch (e) {
+    }
+  }
 }
 

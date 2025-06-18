@@ -6,7 +6,8 @@ import TimelineHeader from './TimeLineHeader';
 import Track from './Track';
 import { videoRefs } from '../Preview';
 import type { TrackType } from '../../Components/types';
-import { setPlaybackSpeed } from '../../Slices/Video/Video.slice';
+import { setPlaybackSpeed, addSplitPoint } from '../../Slices/Video/Video.slice';
+
 
 const Timeline = () => {
   const dispatch = useDispatch();
@@ -140,6 +141,13 @@ const Timeline = () => {
     dispatch(setPlaybackSpeed(speed));
   };
 
+  const handleSplitClick = () => {
+    dispatch(addSplitPoint({
+      startTime: 0,
+      endTime: currentTime
+    }));
+  };
+
   return (
     <div className="w-full h-full bg-white font-dmsans flex flex-col overflow-y-auto">
       <TimelineControls
@@ -152,6 +160,7 @@ const Timeline = () => {
         onZoomOut={zoomOut}
         playbackSpeed={playbackSpeed}
         onPlaybackSpeedChange={handlePlaybackSpeedChange}
+        onSplitClick={handleSplitClick}
       />
 
       <div className="flex flex-col overflow-hidden relative">
