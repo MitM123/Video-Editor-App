@@ -1,22 +1,21 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { toBlobURL, fetchFile } from "@ffmpeg/util";
+import { fetchFile } from "@ffmpeg/util";
 
 // Keep track of FFmpeg instance
 let ffmpegInstance: any = null;
 
 // Initialize FFmpeg
 export async function getFFmpegInstance() {
-    if (ffmpegInstance) return ffmpegInstance;
+  if (ffmpegInstance) return ffmpegInstance;
 
-    try {
-        const { FFmpeg } = await import('@ffmpeg/ffmpeg');
-        ffmpegInstance = new FFmpeg();
-        await ffmpegInstance.load();
-        return ffmpegInstance;
-    } catch (error) {
-        console.error('Failed to load FFmpeg:', error);
-        return null;
-    }
+  try {
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+    ffmpegInstance = new FFmpeg();
+    await ffmpegInstance.load();
+    return ffmpegInstance;
+  } catch (error) {
+    console.error('Failed to load FFmpeg:', error);
+    return null;
+  }
 }
 
 export interface WatermarkConfig {
@@ -124,53 +123,53 @@ export async function trimVideo(inputUrl: string, startTime: number, duration: n
 }
 
 export async function addImageOverlay(
-    inputUrl: string,
-    imageUrl: string,
-    position: { x: number, y: number }
+  inputUrl: string,
+  imageUrl: string,
+  position: { x: number, y: number }
 ): Promise<Uint8Array> {
-    console.log('Processing image overlay...');
-    try {
-        const ffmpeg = await getFFmpegInstance();
-        if (!ffmpeg) {
-            throw new Error('Failed to initialize FFmpeg');
-        }
-        console.log('addImageOverlay: FFmpeg instance acquired');
-
-        ffmpeg.on('log', ({ message }: { message: string }) => {
-            console.log('addImageOverlay: FFmpeg log:', message);
-        });
-
-        console.log('addImageOverlay: Writing input files');
-        await Promise.all([
-            ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl)),
-            ffmpeg.writeFile("overlay.png", await fetchFile(imageUrl))
-        ]);
-        console.log('addImageOverlay: Input files written');
-
-        console.log(`addImageOverlay: Running FFmpeg overlay with position x: ${position.x}, y: ${position.y}`);
-        await ffmpeg.exec([
-            "-i", "input.mp4",
-            "-i", "overlay.png",
-            "-filter_complex", `[1:v]format=rgba[over];[0:v][over]overlay=${position.x}:${position.y}:format=auto`,
-            "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "23",
-            "-c:a", "copy",
-            "-movflags", "+faststart",
-            "-f", "mp4",
-            "output.mp4"
-        ]);
-        console.log('addImageOverlay: FFmpeg processing complete.');
-
-        console.log('addImageOverlay: Reading output.mp4 from FFmpeg FS...');
-        const fileData = await ffmpeg.readFile("output.mp4");
-        console.log('addImageOverlay: Output video read from FFmpeg FS.');
-
-        return new Uint8Array(fileData as ArrayBuffer);
-    } catch (error) {
-        console.error('addImageOverlay: Processing failed:', error);
-        throw error;
+  console.log('Processing image overlay...');
+  try {
+    const ffmpeg = await getFFmpegInstance();
+    if (!ffmpeg) {
+      throw new Error('Failed to initialize FFmpeg');
     }
+    console.log('addImageOverlay: FFmpeg instance acquired');
+
+    ffmpeg.on('log', ({ message }: { message: string }) => {
+      console.log('addImageOverlay: FFmpeg log:', message);
+    });
+
+    console.log('addImageOverlay: Writing input files');
+    await Promise.all([
+      ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl)),
+      ffmpeg.writeFile("overlay.png", await fetchFile(imageUrl))
+    ]);
+    console.log('addImageOverlay: Input files written');
+
+    console.log(`addImageOverlay: Running FFmpeg overlay with position x: ${position.x}, y: ${position.y}`);
+    await ffmpeg.exec([
+      "-i", "input.mp4",
+      "-i", "overlay.png",
+      "-filter_complex", `[1:v]format=rgba[over];[0:v][over]overlay=${position.x}:${position.y}:format=auto`,
+      "-c:v", "libx264",
+      "-preset", "fast",
+      "-crf", "23",
+      "-c:a", "copy",
+      "-movflags", "+faststart",
+      "-f", "mp4",
+      "output.mp4"
+    ]);
+    console.log('addImageOverlay: FFmpeg processing complete.');
+
+    console.log('addImageOverlay: Reading output.mp4 from FFmpeg FS...');
+    const fileData = await ffmpeg.readFile("output.mp4");
+    console.log('addImageOverlay: Output video read from FFmpeg FS.');
+
+    return new Uint8Array(fileData as ArrayBuffer);
+  } catch (error) {
+    console.error('addImageOverlay: Processing failed:', error);
+    throw error;
+  }
 }
 
 export interface VideoEditConfig {
@@ -234,7 +233,7 @@ export async function processVideoExport(config: VideoEditConfig): Promise<Uint8
 
   if (config.texts && config.texts.length > 0) {
     await ffmpeg.writeFile('arial.ttf', await fetchFile('https://raw.githubusercontent.com/ffmpegwasm/testdata/master/arial.ttf'));
-    config.texts.forEach((text, i) => {
+    config.texts.forEach((text) => {
       // Convert color to hex if needed (assume it's already hex or named)
       // Font weight is not supported by drawtext, so we ignore it
       // x/y are in pixels, so use as is

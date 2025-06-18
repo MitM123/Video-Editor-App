@@ -50,7 +50,7 @@ const PreviewText = () => {
                 <Rnd
                     key={text.id}
                     position={{ x: text.position.x, y: text.position.y }}
-                    onDragStop={(e, d) => {
+                    onDragStop={(_, d) => {
                         dispatch(updateTextPosition({
                             id: text.id,
                             position: { x: d.x, y: d.y }

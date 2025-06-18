@@ -119,17 +119,6 @@ const Timeline = () => {
     setDraggedClip({ clipId, offset: e.clientX - rect.left });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (draggedClip && timelineRef.current) {
-      const newPosition = (e.clientX - timelineRef.current.getBoundingClientRect().left - draggedClip.offset) / pixelsPerSecond;
-      setTracks(prevTracks => prevTracks.map(track => ({
-        ...track,
-        clips: track.clips.map(clip =>
-          clip.id === draggedClip.clipId ? { ...clip, startTime: Math.max(0, newPosition) } : clip
-        )
-      })));
-    }
-  };
 
   useEffect(() => {
     Object.values(videoRefs).forEach(ref => {

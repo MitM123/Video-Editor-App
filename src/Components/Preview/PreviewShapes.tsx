@@ -35,7 +35,7 @@ const PreviewShapes = () => {
         )
     };
 
-    const handleDragStop = (e: any, d: any, id: string) => {
+    const handleDragStop = (d: any, id: string) => {
         dispatch(updateShapePosition({
             id,
             position: { x: d.x, y: d.y }
@@ -73,7 +73,7 @@ const PreviewShapes = () => {
                     key={`shape-${shape.id}`}
                     size={{ width: shape.size.width, height: shape.size.height }}
                     position={{ x: shape.position.x, y: shape.position.y }}
-                    onDragStop={(e, d) => handleDragStop(e, d, shape.id)}
+                    onDragStop={(_, d) => handleDragStop(d, shape.id)}
                     onResizeStop={(ref, position) =>
                         handleResizeStop(ref, position, shape.id)
                     }
