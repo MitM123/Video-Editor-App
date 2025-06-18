@@ -8,7 +8,8 @@ export interface VideoItem {
   duration: number;
   appliedFilter?: string;
   appliedEffect?: string;
-  processedUrl?: string; 
+  processedUrl?: string;
+  processedData?: Uint8Array;
 }
 
 interface VideoState {
@@ -28,6 +29,9 @@ const videoSlice = createSlice({
     },
     removeVideo: (state, action: PayloadAction<number>) => {
       URL.revokeObjectURL(state.uploadedVideos[action.payload].url);
+      if (state.uploadedVideos[action.payload].processedUrl) {
+        URL.revokeObjectURL(state.uploadedVideos[action.payload].processedUrl!);
+      }
       state.uploadedVideos.splice(action.payload, 1);
     },
     setVideoFilter: (state, action: PayloadAction<{ url: string; filter: string }>) => {
@@ -42,10 +46,14 @@ const videoSlice = createSlice({
         video.appliedEffect = action.payload.effect;
       }
     },
-    setProcessedVideo: (state, action: PayloadAction<{ url: string; processedUrl: string }>) => {
+    setProcessedVideo: (state, action: PayloadAction<{ url: string; processedUrl: string; processedData: Uint8Array }>) => {
       const video = state.uploadedVideos.find(v => v.url === action.payload.url);
       if (video) {
+        if (video.processedUrl) {
+          URL.revokeObjectURL(video.processedUrl);
+        }
         video.processedUrl = action.payload.processedUrl;
+        video.processedData = action.payload.processedData;
       }
     },
   },

@@ -2,9 +2,26 @@ import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import type { RootState } from '../../Slices/store';
 import { videoRefs } from '../Preview';
+import { useEffect } from 'react';
 
 const PreviewVideos = () => {
     const uploadedVideos = useSelector((state: RootState) => state.video.uploadedVideos);
+
+    useEffect(() => {
+        uploadedVideos.forEach((video, index) => {
+            const videoElement = videoRefs[index]?.current;
+            if (videoElement) {
+                const currentSrc = videoElement.querySelector('source')?.src;
+                const newSrc = video.processedUrl || video.url;
+                
+                if (currentSrc !== newSrc) {
+                    videoElement.querySelector('source')!.src = newSrc;
+                    videoElement.load(); 
+                    videoElement.currentTime = 0; 
+                }
+            }
+        });
+    }, [uploadedVideos]);
 
     const getMediaStyle = (media: any) => {
         const FILTER_STYLES: Record<string, string> = {
@@ -61,7 +78,7 @@ const PreviewVideos = () => {
                             filter: getMediaStyle(video)
                         }}
                     >
-                        <source src={video.url} type="video/mp4" />
+                        <source src={video.processedUrl || video.url} type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
                 </motion.div>
