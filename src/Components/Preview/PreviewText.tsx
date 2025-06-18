@@ -1,29 +1,48 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Rnd } from 'react-rnd';
 import type { RootState } from '../../Slices/store';
-import {
-    updateTextContent,
-    updateTextPosition,
-    setEditing,
-    deleteText
-} from '../../Slices/Text/Text.slice';
+import { updateTextContent, updateTextPosition, setEditing, deleteText } from '../../Slices/Text/Text.slice';
+import { useEffect, useRef, useState } from 'react';
 
 const PreviewText = () => {
     const dispatch = useDispatch();
     const texts = useSelector((state: RootState) => state.text.texts);
+    const [activeTextId, setActiveTextId] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
     const handleDoubleClick = (id: string) => {
         dispatch(setEditing({ id, isEditing: true }));
+        setActiveTextId(id);
+        setIsEditing(true);
     };
 
     const handleBlur = (id: string, content: string) => {
         dispatch(updateTextContent({ id, content }));
         dispatch(setEditing({ id, isEditing: false }));
+        setActiveTextId(id);
+        setIsEditing(false);
     };
 
-    const handleDelete = (id: string) => {
-        dispatch(deleteText(id));
+    const handleClick = (id: string) => {
+        if (!isEditing) {
+            setActiveTextId(id);
+        }
     };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Backspace' && activeTextId && !isEditing) {
+                dispatch(deleteText(activeTextId));
+                setActiveTextId(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [activeTextId, dispatch, isEditing]);
 
     return (
         <>
@@ -38,14 +57,19 @@ const PreviewText = () => {
                         }));
                     }}
                     style={{
-                        zIndex: 10,
+                        zIndex: text.id === activeTextId ? 20 : 10,
                         fontSize: `${text.style.fontSize}px`,
                         color: text.style.color,
                         fontWeight: text.style.fontWeight,
-                        cursor: 'move'
+                        cursor: 'move',
+                        outline: text.id === activeTextId ? '2px dashed #3b82f6' : 'none'
                     }}
+                    onClick={() => handleClick(text.id)}
                 >
-                    <div className="group relative p-2 bg-white bg-opacity-80 rounded">
+                    <div
+                        className="group relative p-2 bg-white bg-opacity-80 rounded"
+                        ref={el => { textRefs.current[text.id] = el; return; }}
+                    >
                         {text.isEditing ? (
                             <input
                                 type="text"
@@ -63,21 +87,16 @@ const PreviewText = () => {
                                     color: 'inherit',
                                     fontWeight: 'inherit'
                                 }}
+                                onMouseDown={(e) => e.stopPropagation()}
                             />
                         ) : (
-                            <div onDoubleClick={() => handleDoubleClick(text.id)}>
-                                {text.content}
+                            <div
+                                onDoubleClick={() => handleDoubleClick(text.id)}
+                                style={{ minHeight: '1em' }}
+                            >
+                                {text.content || <span className="opacity-50">Double-click to edit</span>}
                             </div>
                         )}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(text.id);
-                            }}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 text-xs pointer-events-auto"
-                        >
-                            ×
-                        </button>
                     </div>
                 </Rnd>
             ))}

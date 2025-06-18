@@ -7,12 +7,14 @@ import {
   updateImageSize,
   bringImageToFront
 } from '../../Slices/Image/Image.slice';
+import { useCallback, useEffect, useState } from 'react';
 
 const PreviewImages = () => {
   const dispatch = useDispatch();
   const uploadedImages = useSelector((state: RootState) => state.image.uploadedImages);
+  const [activeImageId, setActiveImageId] = useState<number | null>(null);
 
-  const getMediaStyle = (media: any) => {
+  const getMediaStyle = useCallback((media: any) => {
     const FILTER_STYLES: Record<string, string> = {
       none: 'none',
       grayscale: 'grayscale(100%)',
@@ -35,33 +37,57 @@ const PreviewImages = () => {
     const effectStyle = media.appliedEffect ? EFFECT_STYLES[media.appliedEffect] || 'none' : 'none';
 
     return filterStyle !== 'none' ? filterStyle : effectStyle;
-  };
+  }, []);
 
-  const handleDeleteImage = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation();
-    dispatch(deleteImage(id));
-  };
-
-  const handleDragStop = (d: any, id: number) => {
-    dispatch(updateImagePosition({ id, position: { x: d.x, y: d.y } }));
+  const handleClick = useCallback((id: number) => {
+    setActiveImageId(id);
     dispatch(bringImageToFront(id));
-  };
+  }, [dispatch]);
 
-  const handleResizeStop = (
-    ref: any,
-    position: any,
-    id: number
+  const handleDragStop = useCallback((e: any, d: { x: number; y: number }) => {
+    const id = Number(e.target.closest('[data-image-id]')?.getAttribute('data-image-id'));
+    if (id) {
+      dispatch(updateImagePosition({ id, position: { x: d.x, y: d.y } }));
+      dispatch(bringImageToFront(id));
+      setActiveImageId(id);
+    }
+  }, [dispatch]);
+
+  const handleResizeStop = useCallback((
+    _e: MouseEvent | TouchEvent,
+    _direction: string,
+    ref: HTMLElement,
+    _delta: { width: number; height: number },
+    position: { x: number; y: number }
   ) => {
-    dispatch(updateImageSize({
-      id,
-      size: {
-        width: ref.offsetWidth,
-        height: ref.offsetHeight
+    const id = Number(ref.getAttribute('data-image-id'));
+    if (id) {
+      dispatch(updateImageSize({
+        id,
+        size: {
+          width: ref.offsetWidth,
+          height: ref.offsetHeight
+        }
+      }));
+      dispatch(updateImagePosition({ id, position }));
+      dispatch(bringImageToFront(id));
+      setActiveImageId(id);
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Backspace' && activeImageId) {
+        dispatch(deleteImage(activeImageId));
+        setActiveImageId(null);
       }
-    }));
-    dispatch(updateImagePosition({ id, position }));
-    dispatch(bringImageToFront(id));
-  };
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeImageId, dispatch]);
 
   if (uploadedImages.length === 0) return null;
 
@@ -72,32 +98,30 @@ const PreviewImages = () => {
           key={`image-${image.id}`}
           size={{ width: image.size.width, height: image.size.height }}
           position={{ x: image.position.x, y: image.position.y }}
-          onDragStop={(d) => handleDragStop(d, image.id)}
-          onResizeStop={(ref, position) =>
-            handleResizeStop(ref, position, image.id)
-          }
+          onDragStop={handleDragStop}
+          onResizeStop={handleResizeStop}
+          onClick={() => handleClick(image.id)}
           style={{
             zIndex: image.zIndex,
-            filter: getMediaStyle(image)
+            filter: getMediaStyle(image),
+            cursor: 'move',
+            outline: activeImageId === image.id ? '2px dashed #3b82f6' : 'none'
           }}
           bounds="parent"
           lockAspectRatio={true}
           resizeHandleClasses={{
             bottomRight: 'resize-handle'
           }}
+          dragHandleClassName="draggable-area"
+          data-image-id={image.id}
         >
-          <div className="relative w-full h-full group">
+          <div className="relative w-full h-full group draggable-area">
             <img
               src={image.url}
               alt={image.name}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain draggable-area"
+              draggable="false"
             />
-            <button
-              onClick={(e) => handleDeleteImage(e, image.id)}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-            >
-              ×
-            </button>
           </div>
         </Rnd>
       ))}
