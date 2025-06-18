@@ -187,8 +187,6 @@ const Timeline = () => {
             ref={timelineRef}
             className="relative bg-white"
             style={{ width: `${totalDuration * pixelsPerSecond}px` }}
-            onMouseMove={handleMouseMove}
-            onMouseUp={() => setDraggedClip(null)}
             onClick={handleTimelineClick}
           >
             {tracks.map((track, trackIndex) => (

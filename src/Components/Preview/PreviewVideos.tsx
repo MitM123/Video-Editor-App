@@ -27,25 +27,15 @@ const PreviewVideos = () => {
         const FILTER_STYLES: Record<string, string> = {
             none: 'none',
             grayscale: 'grayscale(100%)',
-            sepia: 'sepia(100%)',
-            blur: 'blur(5px)',
-            brightness: 'brightness(1.5)',
-            contrast: 'contrast(1.5)'
+            cool: 'brightness(0.9) contrast(1.1) hue-rotate(180deg)',
+            warm: 'brightness(1.1) contrast(0.9) hue-rotate(-20deg)',
+            cinematic: 'contrast(1.3) brightness(0.9) saturate(1.1)',
+            blur: 'blur(4px)',
         };
 
-        const EFFECT_STYLES: Record<string, string> = {
-            none: 'none',
-            vintage: 'sepia(70%) brightness(80%) contrast(120%)',
-            cool: 'brightness(90%) contrast(110%) hue-rotate(180deg)',
-            warm: 'brightness(110%) contrast(90%) hue-rotate(-20deg)',
-            cinematic: 'contrast(130%) brightness(90%) saturate(110%)',
-            bw: 'grayscale(100%) contrast(120%)'
-        };
+        const filterStyle = media.appliedEffect ? FILTER_STYLES[media.appliedEffect] || 'none' : 'none';
 
-        const filterStyle = media.appliedFilter ? FILTER_STYLES[media.appliedFilter] || 'none' : 'none';
-        const effectStyle = media.appliedEffect ? EFFECT_STYLES[media.appliedEffect] || 'none' : 'none';
-
-        return filterStyle !== 'none' ? filterStyle : effectStyle;
+        return filterStyle;
     };
 
     if (uploadedVideos.length === 0) return null;

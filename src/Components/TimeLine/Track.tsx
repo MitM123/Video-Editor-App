@@ -43,20 +43,20 @@ const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackPro
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const frameInterval = 4;
+        const frameInterval = 1;
         const totalDuration = video.duration;
         console.log(totalDuration);
 
         const numFrames = Math.floor(totalDuration / frameInterval);
 
-        const targetWidth = 480;
+        const targetWidth = 50;
         const scale = targetWidth / video.videoWidth;
         canvas.width = targetWidth;
         canvas.height = video.videoHeight * scale;
 
         const frames: string[] = [];
 
-        for (let i = 0; i < numFrames; i++) {
+        for (let i = 0; i <= numFrames; i++) {
             const time = i * frameInterval;
             await new Promise<void>((resolve) => {
                 video.currentTime = time;
@@ -83,13 +83,13 @@ const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackPro
 
     return (
         <div
-            className="relative h-24 border-b w-full mx-2"
+            className="relative h-24 border-b mx-2"
             style={{
                 backgroundColor: trackIndex % 2 === 0 ? '#ffffff' : '#f8f9fa',
                 borderColor: '#e9ebed'
             }}
         >
-            <div className="h-full relative">
+            <div className="">
                 {track.clips.map(clip => {
                     let clipContent;
                     let clipStyle = {
@@ -117,14 +117,14 @@ const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackPro
                             clipContent = (
                                 <div className="h-full w-full flex items-center justify-center rounded overflow-hidden bg-gray-200">
                                     {frames.length > 0 ? (
-                                        <div className="flex w-full h-full space-x-1">
+                                        <div className="flex w-full h-full">
                                             {frames.map((frame, i) => (
                                                 <img
                                                     key={i}
                                                     src={frame}
                                                     alt={`frame-${i}`}
                                                     className="h-full w-full object-cover rounded-md border border-blue-700"
-                                                    style={{ width: `${pixelsPerSecond * 4}px` }}
+                                                    style={{ width: `${pixelsPerSecond * 1}px` }}
                                                 />
                                             ))}
 

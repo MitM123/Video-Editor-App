@@ -17,6 +17,12 @@ export async function getFFmpegInstance() {
     });
     isLoaded = true;
   }
+  ffmpegInstance.on("progress", (progress) => {
+    console.log(progress.progress);
+  });
+  ffmpegInstance.on("log", (message) => {
+    console.log(message.message);
+  });
   return ffmpegInstance;
 }
 
@@ -127,33 +133,92 @@ export async function trimVideo(inputUrl: string, startTime: number, duration: n
 export async function addImageOverlay(
   inputUrl: string,
   imageUrl: string,
-  position: { x: number, y: number }
+  position: { x: number; y: number },
+  size: { width: number; height: number } = { width: 200, height: 200 }
 ): Promise<Uint8Array> {
   const ffmpeg = await getFFmpegInstance();
 
-  // Write input files
-  await Promise.all([
-    ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl)),
-    ffmpeg.writeFile("overlay.png", await fetchFile(imageUrl))
-  ]);
+  console.log('Starting addImageOverlay:', { inputUrl, imageUrl, position, size });
 
-  // Execute FFmpeg command
-  await ffmpeg.exec([
-    "-i", "input.mp4",
-    "-i", "overlay.png",
-    "-filter_complex", `[1:v]format=rgba[over];[0:v][over]overlay=${position.x}:${position.y}:format=auto`,
-    "-c:v", "libx264",
-    "-preset", "fast",
-    "-crf", "23",
-    "-c:a", "copy",
-    "-movflags", "+faststart",
-    "-f", "mp4",
-    "output.mp4"
-  ]);
+  try {
+    // **Step 1: Clean up any existing files**
+    await Promise.all([
+      ffmpeg.deleteFile("input.mp4").catch(() => {}),
+      ffmpeg.deleteFile("overlay.png").catch(() => {}),
+      ffmpeg.deleteFile("output.mp4").catch(() => {}),
+    ]);
+    console.log('Cleaned up existing files');
 
-  const fileData = await ffmpeg.readFile("output.mp4");
-  return new Uint8Array(fileData as ArrayBuffer);
+    // **Step 2: Fetch input files**
+    console.log('Fetching input files...');
+    const videoData = await fetchFile(inputUrl);
+    const imageData = await fetchFile(imageUrl);
+
+    if (!videoData || videoData.byteLength === 0) {
+      throw new Error('Failed to fetch or empty video file');
+    }
+    if (!imageData || imageData.byteLength === 0) {
+      throw new Error('Failed to fetch or empty image file');
+    }
+    console.log('Input files fetched successfully');
+
+    // **Step 3: Write files to FFmpeg filesystem**
+    console.log('Writing files to FFmpeg filesystem...');
+    await ffmpeg.writeFile("input.mp4", videoData);
+    await ffmpeg.writeFile("overlay.png", imageData);
+    console.log('Files written to FFmpeg filesystem');
+
+    // **Step 4: Build and execute FFmpeg command**
+    const filterComplex = `[1:v]scale=${size.width}:${size.height}[scaled];[0:v][scaled]overlay=${position.x}:${position.y}:format=auto`;
+    console.log('Executing FFmpeg with filter:', filterComplex);
+
+    await ffmpeg.exec([
+      '-i', 'input.mp4',
+      '-i', 'overlay.png',
+      '-filter_complex', filterComplex,
+      '-c:v', 'libx264',
+      '-preset', 'fast',
+      '-crf', '23',
+      '-c:a', 'copy',
+      '-movflags', '+faststart',
+      '-f', 'mp4',
+      'output.mp4',
+    ]);
+    console.log('FFmpeg command completed');
+
+    // **Step 5: Read and validate the output**
+    console.log('Reading output file...');
+    const outputData:any = await ffmpeg.readFile("output.mp4");
+
+    if (!outputData || outputData.byteLength === 0) {
+      throw new Error('Output file is empty or could not be read');
+    }
+    console.log('Output file read successfully, size:', outputData.byteLength, 'bytes');
+
+    // **Step 6: Convert and return as Uint8Array**
+    const result = new Uint8Array(outputData as ArrayBuffer);
+    console.log('Returning Uint8Array, length:', result.length);
+
+    return result;
+
+  } catch (error: any) {
+    console.error('Error in addImageOverlay:', error);
+    throw new Error(`Failed to add image overlay: ${error?.message || 'Unknown error'}`);
+  } finally {
+    // **Step 7: Clean up files**
+    try {
+      await Promise.all([
+        ffmpeg.deleteFile("input.mp4").catch(() => {}),
+        ffmpeg.deleteFile("overlay.png").catch(() => {}),
+        ffmpeg.deleteFile("output.mp4").catch(() => {}),
+      ]);
+      console.log('Cleaned up files in finally block');
+    } catch (e) {
+      console.warn('Non-critical cleanup error:', e);
+    }
+  }
 }
+
 
 export interface VideoEditConfig {
   inputUrl: string;
@@ -266,52 +331,67 @@ export async function applyVideoEffect(inputUrl: string, effect: string): Promis
   const ffmpeg = await getFFmpegInstance();
 
   try {
+    // Clean up any existing files
     try {
       await ffmpeg.deleteFile("input.mp4");
       await ffmpeg.deleteFile("output.mp4");
     } catch (e) {
     }
 
-    await ffmpeg.writeFile("input.mp4", await fetchFile(inputUrl));
+    const inputData = await fetchFile(inputUrl);
+    if (!inputData) throw new Error('Failed to fetch input file');
+    await ffmpeg.writeFile("input.mp4", inputData);
 
+    console.log('Applying effect:', effect);
     let filterCommand = "";
+    
     switch (effect.toLowerCase()) {
-      case "grayscale":
-        filterCommand = "colorchannelmixer=.3:.4:.3:0:.3:.4:.3:0:.3:.4:.3";
+      case "none":
+        filterCommand = ""; 
         break;
-      case "sepia":
-        filterCommand = "colorize=hue=30:saturation=50:lightness=0";
+      case "grayscale":
+        filterCommand = "hue=s=0";
+        break;
+      case "cool":
+        filterCommand = "eq=brightness=-0.1:contrast=1.1,hue=h=180";
+        break;
+      case "warm":
+        filterCommand = "eq=brightness=0.1:contrast=0.9,hue=h=-20";
+        break;
+      case "cinematic":
+        filterCommand = "eq=contrast=1.3:brightness=-0.1:saturation=1.1";
         break;
       case "blur":
         filterCommand = "gblur=sigma=2";
         break;
-      case "sharpen":
-        filterCommand = "unsharp=5:5:1:5:5:0";
-        break;
-      case "brightness":
-        filterCommand = "eq=brightness=0.2";
-        break;
-      case "contrast":
-        filterCommand = "eq=contrast=1.5";
-        break;
-      case "saturation":
-        filterCommand = "eq=saturation=2";
-        break;
       default:
         throw new Error(`Unsupported effect: ${effect}`);
     }
+    
+    console.log('Filter command:', filterCommand);
 
-    await ffmpeg.exec([
-      "-i", "input.mp4",
-      "-vf", filterCommand,
-      "-c:v", "libx264",
-      "-preset", "ultrafast",
-      "-crf", "23",
-      "-c:a", "copy",
-      "-movflags", "+faststart",
-      "-f", "mp4",
-      "output.mp4"
-    ]);
+    if (!filterCommand || filterCommand === "") {
+      await ffmpeg.exec([
+        "-i", "input.mp4",
+        "-c:v", "copy",
+        "-c:a", "copy",
+        "-f", "mp4",
+        "output.mp4"
+      ]);
+    } else {
+      await ffmpeg.exec([
+        "-i", "input.mp4",
+        "-vf", filterCommand,
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-crf", "23",
+        "-c:a", "copy",
+        "-avoid_negative_ts", "make_zero",
+        "-movflags", "+faststart",
+        "-f", "mp4",
+        "output.mp4"
+      ]);
+    }
 
     const fileData = await ffmpeg.readFile("output.mp4");
     if (!fileData) throw new Error('Failed to read output file');

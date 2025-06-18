@@ -1,17 +1,16 @@
-import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-    Upload,
-    Play,
-    Music2,
+    FilterIcon,
     Image,
-    Type,
+    Music2,
+    Play,
     SmilePlus,
     SquaresExclude,
-    FilterIcon,
-    Sparkles
+    Type,
+    Upload
 } from 'lucide-react';
+import { useState } from 'react';
 import SideBarPanel from './SideBarPenel';
-import { AnimatePresence, motion } from 'framer-motion';
 
 const SideBar = () => {
     const [activeItem, setActiveItem] = useState('elements');
@@ -31,11 +30,6 @@ const SideBar = () => {
             id: 'filters',
             icon: FilterIcon,
             label: 'Filters'
-        },
-        {
-            id: 'effects',
-            icon: Sparkles,
-            label: 'Effects'
         },
         {
             id: 'audio',

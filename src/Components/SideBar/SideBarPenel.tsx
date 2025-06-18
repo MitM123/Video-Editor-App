@@ -1,17 +1,16 @@
 import {
-    X,
-    Search
+    Search,
+    X
 } from 'lucide-react';
-import Elements from './RendarPenelComponents/Elements';
-import Uploads from './RendarPenelComponents/Uploads';
-import Videos from './RendarPenelComponents/Videos';
 import Audio from './RendarPenelComponents/Audio';
+import Elements from './RendarPenelComponents/Elements';
+import Filter from './RendarPenelComponents/Filter';
 import Images from './RendarPenelComponents/Images';
-import Text from './RendarPenelComponents/Text';
 import Shapes from './RendarPenelComponents/Shapes';
 import Stickers from './RendarPenelComponents/Stickers';
-import Filter from './RendarPenelComponents/Filter';
-import Effects from './RendarPenelComponents/Effects';
+import Text from './RendarPenelComponents/Text';
+import Uploads from './RendarPenelComponents/Uploads';
+import Videos from './RendarPenelComponents/Videos';
 
 const SideBarPanel = ({ activeItem, isOpen, onClose }: { activeItem: string; isOpen: boolean; onClose: () => void }) => {
     if (!isOpen) return null;
@@ -36,11 +35,6 @@ const SideBarPanel = ({ activeItem, isOpen, onClose }: { activeItem: string; isO
             case 'filters':
                 return (
                     <Filter />
-                );
-
-            case 'effects':
-                return (
-                    <Effects />
                 );
 
             case 'audio':
