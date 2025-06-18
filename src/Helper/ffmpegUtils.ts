@@ -126,7 +126,7 @@ export async function trimVideo(inputUrl: string, startTime: number, duration: n
 export async function addImageOverlay(
     inputUrl: string,
     imageUrl: string,
-    position: { x: 30, y: 30 }
+    position: { x: number, y: number }
 ): Promise<Uint8Array> {
     console.log('Processing image overlay...');
     try {

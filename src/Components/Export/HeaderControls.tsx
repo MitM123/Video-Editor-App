@@ -122,8 +122,8 @@ const HeaderControls = ({ projectName, onProjectNameChange, onExportClick, split
                         }
                         console.log('Processing image overlay...');
                         const imageResult = await addImageOverlay(processedVideoUrl, image.url, {
-                            x: image.position.x,
-                            y: image.position.y
+                            x: 30,
+                            y: 30,
                         });
 
                         if (!imageResult) {

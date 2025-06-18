@@ -73,7 +73,7 @@ const Track = ({ track, pixelsPerSecond, onClipMouseDown, trackIndex }: TrackPro
     };
 
     useEffect(() => {
-        console.log("Track array", track)
+        // console.log("Track array", track)
         track.clips.forEach(clip => {
             if (clip.type === 'video' && clip.src && !clipFrames[clip.id]) {
                 extractFrames(clip);
