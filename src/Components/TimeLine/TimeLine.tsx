@@ -14,7 +14,6 @@ const Timeline = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [timelineScale, setTimelineScale] = useState(1);
-  const [draggedClip, setDraggedClip] = useState<{ clipId: string; offset: number } | null>(null);
   const playbackSpeed = useSelector((state: RootState) => state.video.playbackSpeed);
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
@@ -113,10 +112,8 @@ const Timeline = () => {
     }
   };
 
-  const handleClipMouseDown = (e: React.MouseEvent, clipId: string) => {
+  const handleClipMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDraggedClip({ clipId, offset: e.clientX - rect.left });
   };
 
 
