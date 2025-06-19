@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../../Slices/store";
-import { setVideoEffect } from "../../../Slices/Video/Video.slice";
+import { setVideoFilter } from "../../../Slices/Video/Video.slice";
 import { useState } from "react";
 
 interface EffectOption {
@@ -57,7 +57,7 @@ const Filters = () => {
     }));
 
     dispatch(
-      setVideoEffect({
+      setVideoFilter({
         url: videoUrl,
         effect: effectValue === "none" ? undefined : effectValue,
       })
@@ -83,11 +83,10 @@ const Filters = () => {
                   return (
                     <div
                       key={`${video.url}-${effect.value}`}
-                      className={`flex flex-col items-center p-3 rounded-lg cursor-pointer transition-all ${
-                        isSelected
+                      className={`flex flex-col items-center p-3 rounded-lg cursor-pointer transition-all ${isSelected
                           ? "bg-blue-100 border-2 border-blue-500 shadow-md"
                           : "bg-gray-100 hover:bg-gray-200 border border-gray-300"
-                      }`}
+                        }`}
                       onClick={() =>
                         handleFilterselect(video.url, effect.value)
                       }
@@ -102,11 +101,10 @@ const Filters = () => {
                         />
                       </div>
                       <p
-                        className={`text-sm font-medium text-center ${
-                          isSelected
+                        className={`text-sm font-medium text-center ${isSelected
                             ? "text-blue-700 font-semibold"
                             : "text-gray-700"
-                        }`}
+                          }`}
                       >
                         {effect.name}
                       </p>

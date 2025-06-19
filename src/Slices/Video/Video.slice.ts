@@ -41,13 +41,7 @@ const videoSlice = createSlice({
       }
       state.uploadedVideos.splice(action.payload, 1);
     },
-    setVideoFilter: (state, action: PayloadAction<{ url: string; filter: string }>) => {
-      const video = state.uploadedVideos.find(v => v.url === action.payload.url);
-      if (video) {
-        video.appliedFilter = action.payload.filter === 'none' ? undefined : action.payload.filter;
-      }
-    },
-    setVideoEffect: (state, action: PayloadAction<{ url: string; effect?: string }>) => {
+    setVideoFilter: (state, action: PayloadAction<{ url: string; effect?: string }>) => {
       const video = state.uploadedVideos.find(v => v.url === action.payload.url);
       if (video) {
         video.appliedEffect = action.payload.effect;
@@ -69,11 +63,8 @@ const videoSlice = createSlice({
     addSplitPoint: (state, action: PayloadAction<{ startTime: number; endTime: number }>) => {
       state.splitPoints.push(action.payload);
     },
-    clearSplitPoints: (state) => {
-      state.splitPoints = [];
-    }
   },
 });
 
-export const { addVideos, removeVideo, setVideoFilter, setVideoEffect, setProcessedVideo, setPlaybackSpeed, addSplitPoint, clearSplitPoints } = videoSlice.actions;
+export const { addVideos, removeVideo, setVideoFilter, setProcessedVideo, setPlaybackSpeed, addSplitPoint } = videoSlice.actions;
 export default videoSlice.reducer;
